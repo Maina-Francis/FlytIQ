@@ -31,10 +31,7 @@ export function AirportAutocomplete({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
@@ -72,9 +69,7 @@ export function AirportAutocomplete({
   return (
     <div ref={containerRef} className="relative w-full">
       {label && (
-        <label className="mb-1 block text-xs font-medium text-muted-foreground">
-          {label}
-        </label>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">{label}</label>
       )}
       {value ? (
         <div className="flex h-11 items-center justify-between rounded-lg border border-input bg-transparent px-3">
@@ -131,14 +126,10 @@ export function AirportAutocomplete({
                 )}
               >
                 <Plane className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span className="w-10 font-bold text-primary">
-                  {airport.iata}
-                </span>
+                <span className="w-10 font-bold text-primary">{airport.iata}</span>
                 <span className="flex-1">
                   <span className="font-medium">{airport.city}</span>
-                  <span className="ml-1.5 text-muted-foreground">
-                    {airport.country}
-                  </span>
+                  <span className="ml-1.5 text-muted-foreground">{airport.country}</span>
                 </span>
               </button>
             ))

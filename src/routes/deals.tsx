@@ -4,13 +4,7 @@ import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, Bell, Mail, Send, Plane, LogOut, Plus } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -51,9 +45,7 @@ type Alert = {
 function DealsPage() {
   const { hydrate: hydrateTheme } = useThemeStore();
   const { currency } = useCurrencyStore();
-  const [session, setSession] = useState<null | { user: { email?: string } }>(
-    null,
-  );
+  const [session, setSession] = useState<null | { user: { email?: string } }>(null);
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
@@ -86,18 +78,16 @@ function DealsPage() {
       if (session) loadAlerts();
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        (async () => {
-          setSession(session);
-          if (session) {
-            await loadAlerts();
-          } else {
-            setAlerts([]);
-          }
-        })();
-      },
-    );
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      (async () => {
+        setSession(session);
+        if (session) {
+          await loadAlerts();
+        } else {
+          setAlerts([]);
+        }
+      })();
+    });
 
     return () => listener.subscription.unsubscribe();
   }, [hydrateTheme, loadAlerts]);
@@ -137,10 +127,7 @@ function DealsPage() {
   }
 
   async function handleDelete(id: string) {
-    const { error } = await supabase
-      .from("price_alerts")
-      .update({ is_active: false })
-      .eq("id", id);
+    const { error } = await supabase.from("price_alerts").update({ is_active: false }).eq("id", id);
     if (error) {
       toast.error("Could not delete alert.");
       return;
@@ -174,18 +161,14 @@ function DealsPage() {
           <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg">
             <Bell className="h-7 w-7 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Track Your Flight Deals
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground">Track Your Flight Deals</h1>
           <p className="mt-2 text-center text-sm text-muted-foreground">
             Sign in to save price alerts and get notified when fares drop.
           </p>
 
           <Card className="mt-8 w-full">
             <CardHeader>
-              <CardTitle>
-                {mode === "signin" ? "Welcome Back" : "Create Account"}
-              </CardTitle>
+              <CardTitle>{mode === "signin" ? "Welcome Back" : "Create Account"}</CardTitle>
               <CardDescription>
                 {mode === "signin"
                   ? "Sign in to manage your tracked deals."
@@ -215,22 +198,12 @@ function DealsPage() {
                   placeholder="At least 6 characters"
                 />
               </div>
-              <Button
-                onClick={handleAuth}
-                disabled={authLoading}
-                className="w-full glow-cta"
-              >
-                {authLoading
-                  ? "Please wait..."
-                  : mode === "signin"
-                    ? "Sign In"
-                    : "Create Account"}
+              <Button onClick={handleAuth} disabled={authLoading} className="w-full glow-cta">
+                {authLoading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
               </Button>
               <Separator />
               <button
-                onClick={() =>
-                  setMode(mode === "signin" ? "signup" : "signin")
-                }
+                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
                 className="w-full text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
                 {mode === "signin"
@@ -250,12 +223,8 @@ function DealsPage() {
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              My Tracked Deals
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Signed in as {session.user.email}
-            </p>
+            <h1 className="text-2xl font-bold text-foreground">My Tracked Deals</h1>
+            <p className="text-sm text-muted-foreground">Signed in as {session.user.email}</p>
           </div>
           <Button variant="outline" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4" />
@@ -270,8 +239,7 @@ function DealsPage() {
             </div>
             <h2 className="font-semibold text-foreground">No alerts yet</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Search for flights and click "Track" to create your first price
-              alert.
+              Search for flights and click "Track" to create your first price alert.
             </p>
             <Button asChild className="mt-4">
               <Link to="/">
@@ -283,19 +251,14 @@ function DealsPage() {
         ) : (
           <div className="space-y-3">
             {alerts.map((alert) => (
-              <div
-                key={alert.id}
-                className="glass-panel rounded-xl p-4 sm:p-5"
-              >
+              <div key={alert.id} className="glass-panel rounded-xl p-4 sm:p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                       <Plane className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">
-                        {alert.route_label}
-                      </p>
+                      <p className="font-semibold text-foreground">{alert.route_label}</p>
                       <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                         {alert.channel === "email" ? (
                           <>
@@ -314,9 +277,7 @@ function DealsPage() {
 
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="text-xs text-muted-foreground">
-                        Target price
-                      </p>
+                      <p className="text-xs text-muted-foreground">Target price</p>
                       <p className="font-bold text-foreground">
                         {formatPrice(alert.target_price_usd, currency)}
                       </p>

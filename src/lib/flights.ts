@@ -96,9 +96,7 @@ export function generateOffers(params: SearchParams): FlightOffer[] {
       base * factor * cabinMult * (0.82 + rand() * 0.55) * (stops === 0 ? 1.12 : 1),
     );
     const dropPercent = rand() < 0.55 ? Math.round(4 + rand() * 24) : 0;
-    const baselineUsd = dropPercent
-      ? Math.round(priceUsd / (1 - dropPercent / 100))
-      : priceUsd;
+    const baselineUsd = dropPercent ? Math.round(priceUsd / (1 - dropPercent / 100)) : priceUsd;
     const departHour = Math.floor(rand() * 24);
     const departMinute = Math.floor(rand() * 4) * 15;
     const durationMinutes = Math.round((120 + rand() * 600) * (1 + stops * 0.35) * factor + 60);

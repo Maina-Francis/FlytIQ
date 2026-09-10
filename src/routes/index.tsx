@@ -83,9 +83,8 @@ function Index() {
           </h1>
 
           <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-            Search flights, track price drops, and book directly with the
-            airline. No hidden fees, no middleman — just the best fares in your
-            local currency.
+            Search flights, track price drops, and book directly with the airline. No hidden fees,
+            no middleman — just the best fares in your local currency.
           </p>
         </div>
 
@@ -97,19 +96,12 @@ function Index() {
       <section className="px-4 pb-20 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-3">
           {FEATURES.map((feature) => (
-            <div
-              key={feature.title}
-              className="glass-panel rounded-xl p-5"
-            >
+            <div key={feature.title} className="glass-panel rounded-xl p-5">
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <feature.icon className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-semibold text-foreground">
-                {feature.title}
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {feature.desc}
-              </p>
+              <h3 className="font-semibold text-foreground">{feature.title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{feature.desc}</p>
             </div>
           ))}
         </div>
@@ -117,8 +109,8 @@ function Index() {
 
       <footer className="border-t border-border px-4 py-8 text-center text-sm text-muted-foreground sm:px-6 lg:px-8">
         <p>
-          FlightIQ — Flight discovery and price tracking. Fares are indicative
-          and for comparison purposes.
+          FlightIQ — Flight discovery and price tracking. Fares are indicative and for comparison
+          purposes.
         </p>
       </footer>
     </div>

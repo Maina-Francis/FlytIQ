@@ -23,7 +23,12 @@ export const AIRPORTS: Airport[] = [
   { iata: "LOS", city: "Lagos", name: "Murtala Muhammed", country: "Nigeria" },
   { iata: "ACC", city: "Accra", name: "Kotoka International", country: "Ghana" },
   { iata: "CAI", city: "Cairo", name: "Cairo International", country: "Egypt" },
-  { iata: "JFK", city: "New York", name: "John F. Kennedy International", country: "United States" },
+  {
+    iata: "JFK",
+    city: "New York",
+    name: "John F. Kennedy International",
+    country: "United States",
+  },
   { iata: "EWR", city: "New York", name: "Newark Liberty", country: "United States" },
   { iata: "LAX", city: "Los Angeles", name: "Los Angeles International", country: "United States" },
   { iata: "ORD", city: "Chicago", name: "O'Hare International", country: "United States" },

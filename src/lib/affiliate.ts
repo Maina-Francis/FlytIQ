@@ -9,7 +9,7 @@ export type DeepLinkInput = {
   origin: string;
   destination: string;
   departureDate: string;
-  returnDate?: string | null;
+  returnDate?: string | null | undefined;
   adults: number;
   cabin: string;
   currency: string;

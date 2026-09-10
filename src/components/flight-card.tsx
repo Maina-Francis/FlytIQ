@@ -35,11 +35,7 @@ export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Prop
   }
 
   const stopsLabel =
-    offer.stops === 0
-      ? "Nonstop"
-      : offer.stops === 1
-        ? "1 Stop"
-        : `${offer.stops} Stops`;
+    offer.stops === 0 ? "Nonstop" : offer.stops === 1 ? "1 Stop" : `${offer.stops} Stops`;
 
   return (
     <div className="glass-panel group rounded-xl p-4 transition-all hover:shadow-lg sm:p-5">
@@ -72,16 +68,12 @@ export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Prop
 
       <div className="mt-4 flex items-center gap-4">
         <div className="text-center">
-          <p className="text-lg font-bold text-foreground">
-            {offer.departTime}
-          </p>
+          <p className="text-lg font-bold text-foreground">{offer.departTime}</p>
           <p className="text-sm font-medium text-primary">{offer.origin}</p>
         </div>
 
         <div className="flex flex-1 flex-col items-center">
-          <p className="text-xs text-muted-foreground">
-            {formatDuration(offer.durationMinutes)}
-          </p>
+          <p className="text-xs text-muted-foreground">{formatDuration(offer.durationMinutes)}</p>
           <div className="relative my-1 h-px w-full bg-border">
             <div className="absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-muted-foreground" />
             <div className="absolute right-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-muted-foreground" />
@@ -90,9 +82,7 @@ export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Prop
         </div>
 
         <div className="text-center">
-          <p className="text-lg font-bold text-foreground">
-            {offer.arriveTime}
-          </p>
+          <p className="text-lg font-bold text-foreground">{offer.arriveTime}</p>
           <p className="text-sm font-medium text-primary">{offer.destination}</p>
         </div>
       </div>
@@ -122,11 +112,7 @@ export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Prop
             <Bell className="h-3.5 w-3.5" />
             Track
           </Button>
-          <Button
-            onClick={handleSelectDeal}
-            size="sm"
-            className={cn("glow-cta gap-1.5")}
-          >
+          <Button onClick={handleSelectDeal} size="sm" className={cn("glow-cta gap-1.5")}>
             Select Deal
             <ArrowRight className="h-3.5 w-3.5" />
           </Button>

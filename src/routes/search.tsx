@@ -108,14 +108,9 @@ function SearchPage() {
   const filtered = useMemo(() => {
     let result = offers.filter((o) => {
       if (o.stops > maxStops) return false;
-      if (
-        selectedAirlines.size > 0 &&
-        !selectedAirlines.has(o.airlineCode)
-      )
-        return false;
+      if (selectedAirlines.size > 0 && !selectedAirlines.has(o.airlineCode)) return false;
       const convertedPrice = o.priceUsd * getCurrency(currency).rate;
-      if (convertedPrice < priceRange[0] || convertedPrice > priceRange[1])
-        return false;
+      if (convertedPrice < priceRange[0] || convertedPrice > priceRange[1]) return false;
       return true;
     });
 
@@ -176,9 +171,8 @@ function SearchPage() {
                 {search.origin} → {search.destination}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {originAirport?.city} to {destAirport?.city} ·{" "}
-                {search.adults} {search.adults === 1 ? "adult" : "adults"} ·{" "}
-                {search.cabin}
+                {originAirport?.city} to {destAirport?.city} · {search.adults}{" "}
+                {search.adults === 1 ? "adult" : "adults"} · {search.cabin}
               </p>
             </div>
           </div>
@@ -194,11 +188,7 @@ function SearchPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr]">
-          <aside
-            className={`${
-              showFilters ? "block" : "hidden"
-            } lg:block`}
-          >
+          <aside className={`${showFilters ? "block" : "hidden"} lg:block`}>
             <div className="glass-panel sticky top-20 rounded-xl p-5">
               <div className="mb-4 flex items-center gap-2">
                 <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
@@ -207,9 +197,7 @@ function SearchPage() {
 
               <div className="space-y-5">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Max Stops
-                  </label>
+                  <label className="text-xs font-medium text-muted-foreground">Max Stops</label>
                   <div className="mt-2 flex gap-2">
                     {[0, 1, 2].map((n) => (
                       <button
@@ -235,7 +223,7 @@ function SearchPage() {
                   </label>
                   <div className="mt-3">
                     <Slider
-                      minStepsBetweenValues={1}
+                      minStepsBetweenThumbs={1}
                       max={maxPrice}
                       step={Math.max(1, Math.floor(maxPrice / 100))}
                       value={priceRange}
@@ -259,15 +247,10 @@ function SearchPage() {
                 <Separator />
 
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Airlines
-                  </label>
+                  <label className="text-xs font-medium text-muted-foreground">Airlines</label>
                   <div className="mt-2 space-y-2">
                     {airlines.map(([code, name]) => (
-                      <label
-                        key={code}
-                        className="flex cursor-pointer items-center gap-2 text-sm"
-                      >
+                      <label key={code} className="flex cursor-pointer items-center gap-2 text-sm">
                         <Checkbox
                           checked={selectedAirlines.has(code)}
                           onCheckedChange={() => toggleAirline(code)}
@@ -285,13 +268,9 @@ function SearchPage() {
           <div>
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                {filtered.length} {filtered.length === 1 ? "flight" : "flights"}{" "}
-                found
+                {filtered.length} {filtered.length === 1 ? "flight" : "flights"} found
               </p>
-              <Select
-                value={sortBy}
-                onValueChange={(v) => setSortBy(v as SortValue)}
-              >
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortValue)}>
                 <SelectTrigger className="w-44">
                   <SelectValue />
                 </SelectTrigger>

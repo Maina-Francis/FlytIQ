@@ -10,7 +10,6 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -36,11 +35,8 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  console.error("[FlightIQ Root Error]", error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -79,15 +75,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "FlightIQ — Smart Flight Tracking" },
-      { name: "description", content: "Find and track flights with real-time price drops, local currency support, and zero booking markup." },
+      {
+        name: "description",
+        content:
+          "Find and track flights with real-time price drops, local currency support, and zero booking markup.",
+      },
       { name: "author", content: "FlightIQ" },
       { property: "og:title", content: "FlightIQ — Smart Flight Tracking" },
-      { property: "og:description", content: "Find and track flights with price-drop alerts and local currency support." },
+      {
+        property: "og:description",
+        content: "Find and track flights with price-drop alerts and local currency support.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@FlightIQ" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,

@@ -3,11 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { format, addDays } from "date-fns";
 import { ArrowLeftRight, Calendar, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -42,12 +38,8 @@ export function SearchWidget() {
   const [tripType, setTripType] = useState<"round" | "oneway">("round");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [departureDate, setDepartureDate] = useState(
-    format(addDays(new Date(), 1), "yyyy-MM-dd"),
-  );
-  const [returnDate, setReturnDate] = useState(
-    format(addDays(new Date(), 8), "yyyy-MM-dd"),
-  );
+  const [departureDate, setDepartureDate] = useState(format(addDays(new Date(), 1), "yyyy-MM-dd"));
+  const [returnDate, setReturnDate] = useState(format(addDays(new Date(), 8), "yyyy-MM-dd"));
   const [adults, setAdults] = useState(1);
   const [cabin, setCabin] = useState<SearchParams["cabin"]>("economy");
   const [departCalOpen, setDepartCalOpen] = useState(false);
@@ -144,27 +136,18 @@ export function SearchWidget() {
 
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">
-            Departure
-          </label>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Departure</label>
           <Popover open={departCalOpen} onOpenChange={setDepartCalOpen}>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-11 w-full justify-start gap-2 font-normal"
-              >
+              <Button variant="outline" className="h-11 w-full justify-start gap-2 font-normal">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                {departureDate
-                  ? format(new Date(departureDate), "MMM d, yyyy")
-                  : "Select date"}
+                {departureDate ? format(new Date(departureDate), "MMM d, yyyy") : "Select date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <CalendarComponent
                 mode="single"
-                selected={
-                  departureDate ? new Date(departureDate) : undefined
-                }
+                selected={departureDate ? new Date(departureDate) : undefined}
                 onSelect={(date) => {
                   if (date) {
                     setDepartureDate(format(date, "yyyy-MM-dd"));
@@ -179,19 +162,12 @@ export function SearchWidget() {
 
         {tripType === "round" && (
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-              Return
-            </label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Return</label>
             <Popover open={returnCalOpen} onOpenChange={setReturnCalOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-11 w-full justify-start gap-2 font-normal"
-                >
+                <Button variant="outline" className="h-11 w-full justify-start gap-2 font-normal">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  {returnDate
-                    ? format(new Date(returnDate), "MMM d, yyyy")
-                    : "Select date"}
+                  {returnDate ? format(new Date(returnDate), "MMM d, yyyy") : "Select date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -205,9 +181,7 @@ export function SearchWidget() {
                     }
                   }}
                   disabled={{
-                    before: departureDate
-                      ? new Date(departureDate)
-                      : new Date(),
+                    before: departureDate ? new Date(departureDate) : new Date(),
                   }}
                 />
               </PopoverContent>
@@ -216,13 +190,8 @@ export function SearchWidget() {
         )}
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">
-            Passengers
-          </label>
-          <Select
-            value={String(adults)}
-            onValueChange={(v) => setAdults(Number(v))}
-          >
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Passengers</label>
+          <Select value={String(adults)} onValueChange={(v) => setAdults(Number(v))}>
             <SelectTrigger className="h-11">
               <SelectValue />
             </SelectTrigger>
@@ -237,9 +206,7 @@ export function SearchWidget() {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">
-            Cabin
-          </label>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Cabin</label>
           <Select value={cabin} onValueChange={(v) => setCabin(v as SearchParams["cabin"])}>
             <SelectTrigger className="h-11">
               <SelectValue />
@@ -255,11 +222,7 @@ export function SearchWidget() {
         </div>
       </div>
 
-      <Button
-        onClick={handleSearch}
-        size="lg"
-        className="glow-cta mt-4 w-full text-base"
-      >
+      <Button onClick={handleSearch} size="lg" className="glow-cta mt-4 w-full text-base">
         <Search className="h-5 w-5" />
         Search Flights
       </Button>

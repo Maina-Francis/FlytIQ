@@ -108,8 +108,7 @@ export function AlertModal({
             Create Price Alert
           </DialogTitle>
           <DialogDescription>
-            Get notified when {origin} → {destination} drops below your target
-            price.
+            Get notified when {origin} → {destination} drops below your target price.
           </DialogDescription>
         </DialogHeader>
 
@@ -117,8 +116,8 @@ export function AlertModal({
           <div className="space-y-4">
             <div className="rounded-lg border border-border bg-muted/30 p-4 text-center">
               <p className="text-sm text-muted-foreground">
-                You need to sign in to track price alerts. Your alerts are saved
-                to your account and can be managed anytime.
+                You need to sign in to track price alerts. Your alerts are saved to your account and
+                can be managed anytime.
               </p>
               <Button asChild className="mt-3">
                 <Link to="/deals">Sign in to track deals</Link>
@@ -130,9 +129,7 @@ export function AlertModal({
             <div className="rounded-lg border border-border bg-muted/30 p-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Current best fare</span>
-                <span className="font-semibold">
-                  {formatPrice(currentPriceUsd, currency)}
-                </span>
+                <span className="font-semibold">{formatPrice(currentPriceUsd, currency)}</span>
               </div>
             </div>
 
@@ -200,11 +197,7 @@ export function AlertModal({
               </div>
             )}
 
-            <Button
-              onClick={handleCreate}
-              disabled={loading}
-              className="w-full glow-cta"
-            >
+            <Button onClick={handleCreate} disabled={loading} className="w-full glow-cta">
               {loading ? "Creating..." : "Create Alert"}
             </Button>
           </div>

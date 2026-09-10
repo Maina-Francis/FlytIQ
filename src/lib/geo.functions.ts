@@ -64,8 +64,7 @@ async function lookupIpinfo(ip: string): Promise<GeoResult | null> {
 export const detectLocation = createServerFn({ method: "GET" }).handler(
   async (): Promise<GeoResult> => {
     const ip = clientIp();
-    const headerCountry =
-      (getRequestHeader("cf-ipcountry" as never) as string | undefined) ?? null;
+    const headerCountry = (getRequestHeader("cf-ipcountry" as never) as string | undefined) ?? null;
 
     if (!ip) {
       return headerCountry

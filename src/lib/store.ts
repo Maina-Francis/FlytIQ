@@ -53,7 +53,11 @@ export const useCurrencyStore = create<CurrencyState>((set, get) => ({
       detectedCountry: geo.country,
       detectedCity: geo.city,
       // Cookie / local storage strictly override IP detection
-      currency: state.userOverride ? state.currency : (CURRENCIES[geo.currency] ? geo.currency : state.currency),
+      currency: state.userOverride
+        ? state.currency
+        : CURRENCIES[geo.currency]
+          ? geo.currency
+          : state.currency,
     }));
   },
 
