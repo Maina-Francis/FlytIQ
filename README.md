@@ -1,21 +1,21 @@
-# FlightIQ
+# FlytIQ
 
-# FlightIQ (flightiq.app) – System Architecture & Product Requirements Document
+# FlytIQ (flytiq.app) – System Architecture & Product Requirements Document
 
 ## Executive Summary & Full Technology Stack
 
-FlightIQ operates on a zero-friction, free-to-use affiliate monetization model. It monetizes user intent via Skyscanner referral links managed on Impact.com, earning Cost-Per-Click (CPC) and Cost-Per-Acquisition (CPA) commissions without paywalls.
+FlytIQ operates on a zero-friction, free-to-use affiliate monetization model. It monetizes user intent via Skyscanner referral links managed on Impact.com, earning Cost-Per-Click (CPC) and Cost-Per-Acquisition (CPA) commissions without paywalls.
 
 ### Core Engineering Tech Stack
 
-- **Frontend Web App:** Next.js (App Router, SSR, Client Components) + Tailwind CSS + Shadcn UI + Zustand (Global Currency/Search State).
-- **Backend API Server:** Express.js (Node.js) handling route caching, geolocation lookup, and affiliate link engine.
+- **Frontend Web App:** TanStack Start (SSR, Client Components) + Tailwind CSS + Shadcn UI + Zustand (Global Currency/Search State).
+- **Backend / Data Engine:** Duffel API Node SDK (`@duffel/api`) handling live flight search and carrier metadata.
 - **Database & Auth:** Supabase (PostgreSQL with Row Level Security, Realtime Subscriptions).
-- **Geolocation & Currency:** IP Geolocation API (`ipapi.co` / `ipinfo.io`) fallback logic + Zustand LocalStorage/Cookie persistence.
+- **Geolocation & Currency:** IP Geolocation API fallback logic + Zustand LocalStorage/Cookie persistence.
 - **Transactional Email:** ZeptoMail API (Zoho) for low-latency HTML price drop alerts.
-- **Chat Ecosystem:** Telegram Bot API (`@FlightIQBot`) running webhooks.
+- **Chat Ecosystem:** Telegram Bot API (`@FlytIQBot`) running webhooks.
 - **Affiliate Management:** Impact.com API / Skyscanner Partner Deeplinks (`mediaPartnerId`).
-- **Analytics & Tracking:** Google Analytics 4 (`@next/third-parties/google`) with custom conversion events.
+- **Analytics & Tracking:** Google Analytics 4 with custom conversion events.
 
 ---
 
@@ -23,10 +23,10 @@ FlightIQ operates on a zero-friction, free-to-use affiliate monetization model. 
 
 ### 2.1 IP Geolocation & Local Currency Middleware
 
-1. **Client IP Detection:** Express.js backend intercepts the incoming request header (`x-forwarded-for` or `cf-connecting-ip`).
+1. **Client IP Detection:** Backend intercepts incoming request header (`x-forwarded-for` or `cf-connecting-ip`).
 2. **Location Lookup:** Queries IP metadata to fetch ISO Country Code and default national currency (e.g., `KE` -> `KES`, `US` -> `USD`, `GB` -> `GBP`, `EU` -> `EUR`).
 3. **State Persistence & Navbar Override:**
-   - If a user selects a currency in the top navbar dropdown, set cookie `flightiq_currency` and update Zustand state.
+   - If a user selects a currency in the top navbar dropdown, set cookie `flytiq_currency` and update Zustand state.
    - Local Storage / Cookie values strictly override IP geolocation detection.
    - All flight cards automatically re-render prices based on the globally active currency code.
 
@@ -43,7 +43,7 @@ FlightIQ operates on a zero-friction, free-to-use affiliate monetization model. 
 
 ## Getting Started Locally
 
-To run FlightIQ locally, ensure you have Node.js (v20+) and npm installed.
+To run FlytIQ locally, ensure you have Node.js (v20+) and npm installed.
 
 ### 1. Install Dependencies
 

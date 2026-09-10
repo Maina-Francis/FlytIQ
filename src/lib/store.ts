@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { DEFAULT_CURRENCY, CURRENCIES } from "./currency";
 
-const CURRENCY_COOKIE = "flightiq_currency";
-const THEME_KEY = "flightiq_theme";
+const CURRENCY_COOKIE = "flytiq_currency";
+const THEME_KEY = "flytiq_theme";
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -34,20 +34,28 @@ export const useCurrencyStore = create<CurrencyState>((set, get) => ({
 
   hydrate: () => {
     if (typeof window === "undefined") return;
-    const stored = readCookie(CURRENCY_COOKIE) ?? window.localStorage.getItem(CURRENCY_COOKIE);
+    const stored =
+      readCookie(CURRENCY_COOKIE) ??
+      readCookie("flytiq_currency") ??
+      window.localStorage.getItem(CURRENCY_COOKIE) ??
+      window.localStorage.getItem("flytiq_currency");
     if (stored && CURRENCIES[stored]) {
       set({ currency: stored, userOverride: true });
     }
-    const country = window.localStorage.getItem("flightiq_country");
-    const city = window.localStorage.getItem("flightiq_city");
+    const country =
+      window.localStorage.getItem("flytiq_country") ??
+      window.localStorage.getItem("flytiq_country");
+    const city =
+      window.localStorage.getItem("flytiq_city") ??
+      window.localStorage.getItem("flytiq_city");
     if (country) set({ detectedCountry: country });
     if (city) set({ detectedCity: city });
   },
 
   setDetected: (geo) => {
     if (typeof window !== "undefined") {
-      if (geo.country) window.localStorage.setItem("flightiq_country", geo.country);
-      if (geo.city) window.localStorage.setItem("flightiq_city", geo.city);
+      if (geo.country) window.localStorage.setItem("flytiq_country", geo.country);
+      if (geo.city) window.localStorage.setItem("flytiq_city", geo.city);
     }
     set((state) => ({
       detectedCountry: geo.country,
@@ -86,7 +94,9 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   theme: "dark",
   hydrate: () => {
     if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(THEME_KEY);
+    const stored =
+      window.localStorage.getItem(THEME_KEY) ??
+      window.localStorage.getItem("flytiq_theme");
     const theme = stored === "light" ? "light" : "dark";
     applyTheme(theme);
     set({ theme });

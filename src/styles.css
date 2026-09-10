@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * FlightIQ design system.
+ * FlytIQ design system.
  * Dark slate default (#0F172A) with indigo primary (#4F46E5),
  * electric cyan accent (#06B6D4), emerald/crimson price indicators.
  * All colors are oklch semantic tokens — never hardcode colors in components.

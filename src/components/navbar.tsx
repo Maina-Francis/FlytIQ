@@ -68,7 +68,7 @@ export function Navbar() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-md">
               <Plane className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-gradient-brand">FlightIQ</span>
+            <span className="text-xl font-bold tracking-tight text-gradient-brand">FlytIQ</span>
           </Link>
 
           <div className="flex items-center gap-1.5 sm:gap-3">

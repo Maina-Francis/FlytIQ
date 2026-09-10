@@ -142,10 +142,10 @@ async function computePriceDrops(
       .upsert(upserts, { onConflict: "route_key" })
       .then(({ error }) => {
         if (error)
-          console.error("[FlightIQ] Cache upsert failed:", error.message);
+          console.error("[FlytIQ] Cache upsert failed:", error.message);
       });
   } catch (err) {
-    console.warn("[FlightIQ] Price drop detection failed:", err);
+    console.warn("[FlytIQ] Price drop detection failed:", err);
   }
 
   return dropMap;
@@ -154,7 +154,7 @@ async function computePriceDrops(
 // ─── Offer Normalization & Skyscanner Affiliate Link Attachment ───────────────
 
 /**
- * Converts raw Duffel offers into FlightIQ's FlightOffer interface.
+ * Converts raw Duffel offers into FlytIQ's FlightOffer interface.
  * Discards Duffel's booking/checkout flows and attaches a direct Skyscanner deep link.
  */
 export function normalizeDuffelOffers(

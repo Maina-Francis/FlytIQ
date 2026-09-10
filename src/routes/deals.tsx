@@ -32,7 +32,7 @@ import type { Session } from "@supabase/supabase-js";
 export const Route = createFileRoute("/deals")({
   head: () => ({
     meta: [
-      { title: "My Tracked Deals — FlightIQ" },
+      { title: "My Tracked Deals — FlytIQ" },
       {
         name: "description",
         content: "View and manage your flight price alerts and notifications.",

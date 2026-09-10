@@ -83,7 +83,7 @@ function FlightCardSkeleton() {
 export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
-      { title: "Search Results — FlightIQ" },
+      { title: "Search Results — FlytIQ" },
       {
         name: "description",
         content: "Compare flight fares and track price drops for your route.",

@@ -10,13 +10,13 @@ import { TrendingDown, Globe, Bell, ShieldCheck } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FlightIQ — Smart Flight Tracking. Zero Markup." },
+      { title: "FlytIQ — Smart Flight Tracking. Zero Markup." },
       {
         name: "description",
         content:
           "Find and track flights with real-time price drops, local currency support, and zero booking markup.",
       },
-      { property: "og:title", content: "FlightIQ — Smart Flight Tracking" },
+      { property: "og:title", content: "FlytIQ — Smart Flight Tracking" },
       {
         property: "og:description",
         content: "Find and track flights with price-drop alerts and local currency support.",
@@ -109,7 +109,7 @@ function Index() {
 
       <footer className="border-t border-border px-4 py-8 text-center text-sm text-muted-foreground sm:px-6 lg:px-8">
         <p>
-          FlightIQ — Flight discovery and price tracking. Fares are indicative and for comparison
+          FlytIQ — Flight discovery and price tracking. Fares are indicative and for comparison
           purposes.
         </p>
       </footer>
