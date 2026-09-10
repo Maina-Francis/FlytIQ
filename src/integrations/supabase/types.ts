@@ -14,7 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      price_alerts: {
+        Row: {
+          id: string
+          user_id: string
+          origin: string
+          destination: string
+          route_label: string
+          target_price_usd: number
+          channel: 'email' | 'telegram'
+          email: string | null
+          telegram_chat_id: string | null
+          last_checked_at: string | null
+          last_price_usd: number | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string
+          origin: string
+          destination: string
+          route_label: string
+          target_price_usd: number
+          channel?: 'email' | 'telegram'
+          email?: string | null
+          telegram_chat_id?: string | null
+          last_checked_at?: string | null
+          last_price_usd?: number | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          origin?: string
+          destination?: string
+          route_label?: string
+          target_price_usd?: number
+          channel?: 'email' | 'telegram'
+          email?: string | null
+          telegram_chat_id?: string | null
+          last_checked_at?: string | null
+          last_price_usd?: number | null
+          is_active?: boolean
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
