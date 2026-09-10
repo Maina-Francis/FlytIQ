@@ -112,6 +112,7 @@ function AirlineLogo({ code, name }: { code: string; name: string }) {
 export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Props) {
   function handleSelectDeal() {
     const deepLink =
+      offer.skyscanner_link ||
       offer.deepLink ||
       buildSkyscannerDeepLink({
         origin: offer.origin,

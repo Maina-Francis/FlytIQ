@@ -2,8 +2,12 @@
  * Skyscanner partner deep links.
  * Set VITE_SKYSCANNER_PARTNER_ID to your Impact.com mediaPartnerId.
  */
-const PARTNER_ID =
-  (import.meta.env["VITE_SKYSCANNER_PARTNER_ID"] as string | undefined) ?? "flightiq-pending";
+const DEFAULT_PARTNER_ID =
+  (typeof process !== "undefined" ? process.env?.["VITE_SKYSCANNER_PARTNER_ID"] : undefined) ??
+  (typeof import.meta !== "undefined" && import.meta.env
+    ? (import.meta.env["VITE_SKYSCANNER_PARTNER_ID"] as string | undefined)
+    : undefined) ??
+  "flightiq-pending";
 
 export type DeepLinkInput = {
   origin: string;
@@ -11,17 +15,24 @@ export type DeepLinkInput = {
   departureDate: string;
   returnDate?: string | null | undefined;
   adults: number;
-  cabin: string;
-  currency: string;
+  cabin?: string;
+  cabinClass?: string;
+  currency?: string;
+  mediaPartnerId?: string;
 };
 
 function compact(date: string) {
-  // YYYY-MM-DD -> YYMMDD as used by Skyscanner transport routes
-  const [y, m, d] = date.split("-");
+  // Handles both YYYY-MM-DD and ISO 8601 YYYY-MM-DDTHH:mm:ss.sssZ
+  const dateOnly = date.split("T")[0] ?? date;
+  const [y, m, d] = dateOnly.split("-");
   return `${(y ?? "").slice(2)}${m ?? ""}${d ?? ""}`;
 }
 
 export function buildSkyscannerDeepLink(input: DeepLinkInput): string {
+  const partnerId = input.mediaPartnerId || DEFAULT_PARTNER_ID;
+  const cabin = (input.cabinClass ?? input.cabin ?? "economy").toLowerCase();
+  const currency = input.currency ?? "USD";
+
   const legs = [
     input.origin.toLowerCase(),
     input.destination.toLowerCase(),
@@ -33,9 +44,9 @@ export function buildSkyscannerDeepLink(input: DeepLinkInput): string {
 
   const params = new URLSearchParams({
     adults: String(input.adults),
-    cabinclass: input.cabin.toLowerCase(),
-    currency: input.currency,
-    associateid: PARTNER_ID,
+    cabinclass: cabin,
+    currency,
+    associateid: partnerId,
     utm_source: "flightiq",
     utm_medium: "affiliate",
   });

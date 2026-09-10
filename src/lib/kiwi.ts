@@ -9,10 +9,8 @@
  *  4. Price-drop detection via the Supabase flight_price_cache table.
  */
 
-import type { SearchParams, FlightOffer } from "./flights";
-import { CABIN_TO_KIWI } from "./flights";
-import { buildSkyscannerDeepLink } from "./affiliate";
-import { getCurrency } from "./currency";
+import type { SearchParams, FlightOffer, KiwiRawOffer } from "./flights";
+import { CABIN_TO_KIWI, normalizeKiwiOffers } from "./flights";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -20,70 +18,8 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 const KIWI_BASE = "https://api.tequila.kiwi.com";
 const API_KEY = process.env.KIWI_TEQUILA_API_KEY ?? process.env["KIWI_TEQUILA_API_KEY"];
 
-// ─── Airline Name Registry (supplements Kiwi's carrier codes) ─────────────────
-
-const AIRLINE_NAMES: Record<string, string> = {
-  KQ: "Kenya Airways",
-  EK: "Emirates",
-  QR: "Qatar Airways",
-  TK: "Turkish Airlines",
-  ET: "Ethiopian Airlines",
-  BA: "British Airways",
-  KL: "KLM",
-  LH: "Lufthansa",
-  AF: "Air France",
-  QF: "Qantas",
-  MS: "EgyptAir",
-  AT: "Royal Air Maroc",
-  SA: "South African Airways",
-  WB: "RwandAir",
-  LO: "LOT Polish Airlines",
-  SQ: "Singapore Airlines",
-  EY: "Etihad Airways",
-  UA: "United Airlines",
-  AA: "American Airlines",
-  DL: "Delta Air Lines",
-  FR: "Ryanair",
-  U2: "easyJet",
-  W6: "Wizz Air",
-};
-
-function airlineName(code: string): string {
-  return AIRLINE_NAMES[code] ?? code;
-}
-
-// ─── Kiwi API Response Types ──────────────────────────────────────────────────
-
-type KiwiRoute = {
-  flyFrom: string;
-  flyTo: string;
-  local_departure: string; // "2024-10-01T10:00:00.000Z"
-  local_arrival: string;
-  airline: string;
-  operating_carrier: string;
-  vehicle_type: string;
-};
-
-type KiwiOffer = {
-  id: string;
-  flyFrom: string;
-  flyTo: string;
-  local_departure: string;
-  local_arrival: string;
-  airlines: string[];
-  route: KiwiRoute[];
-  price: number;
-  duration: {
-    departure: number; // seconds
-    return: number | null;
-    total: number; // seconds
-  };
-  quality?: number;
-  deep_link?: string;
-};
-
 type KiwiSearchResponse = {
-  data: KiwiOffer[];
+  data: KiwiRawOffer[];
   currency: string;
   _results: number;
 };
@@ -94,12 +30,6 @@ type KiwiSearchResponse = {
 export function toKiwiDate(iso: string): string {
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
-}
-
-/** "2024-10-01T14:30:00.000Z" -> "14:30" */
-function formatTime(isoDatetime: string): string {
-  const timePart = isoDatetime.split("T")[1] ?? "";
-  return timePart.slice(0, 5);
 }
 
 // ─── Price Drop Detection ─────────────────────────────────────────────────────
@@ -233,63 +163,9 @@ export async function fetchKiwiFlights(
 
   if (kiwiOffers.length === 0) return [];
 
-  // Currency rate conversion if response returned in non-USD
-  const currencyRate = getCurrency(requestedCurrency).rate || 1;
+  // ── Normalize Kiwi offers -> FlightOffer[] with direct Skyscanner deep link ──
+  const mapped = normalizeKiwiOffers(kiwiOffers, params);
 
-  // ── Map Kiwi -> FlightOffer with direct Skyscanner deep-link builder integration ──
-  const mapped: FlightOffer[] = kiwiOffers.map((o, idx) => {
-    const airlineCode = o.airlines[0] ?? o.route[0]?.airline ?? "??";
-    const firstSeg = o.route[0];
-    const lastSeg = o.route[o.route.length - 1];
-
-    // Calculate USD price accurately based on requested currency rate
-    const rawPrice = o.price;
-    const priceUsd =
-      requestedCurrency.toUpperCase() === "USD"
-        ? Math.round(rawPrice)
-        : Math.round(rawPrice / currencyRate);
-
-    // Kiwi duration in seconds for departure leg
-    const durationMinutes = Math.round(o.duration.departure / 60);
-
-    const departTime = firstSeg
-      ? formatTime(firstSeg.local_departure)
-      : formatTime(o.local_departure);
-
-    const arriveTime = lastSeg
-      ? formatTime(lastSeg.local_arrival)
-      : formatTime(o.local_arrival);
-
-    const stops = Math.max(0, o.route.length - 1);
-
-    // Build affiliate Skyscanner deep link directly for this offer
-    const deepLink = buildSkyscannerDeepLink({
-      origin: o.flyFrom,
-      destination: o.flyTo,
-      departureDate: params.departureDate,
-      returnDate: params.returnDate,
-      adults: params.adults,
-      cabin: params.cabin,
-      currency: requestedCurrency,
-    });
-
-    return {
-      id: o.id ?? `kiwi-${idx}`,
-      airline: airlineName(airlineCode),
-      airlineCode,
-      priceUsd,
-      baselineUsd: priceUsd,
-      dropPercent: 0,
-      departTime,
-      arriveTime,
-      durationMinutes,
-      stops,
-      origin: o.flyFrom,
-      destination: o.flyTo,
-      bestLocalFare: false,
-      deepLink,
-    };
-  });
 
   // ── Price drop detection ──────────────────────────────────────────────────
   const dropMap = await computePriceDrops(mapped, params.departureDate);
