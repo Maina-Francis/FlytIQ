@@ -1,9 +1,8 @@
 /**
  * flights.functions.ts
- * TanStack Start server function: fetches live flight offers from the Kiwi
- * Tequila API.
+ * TanStack Start server function: fetches live flight offers from the Duffel API.
  *
- * If credentials are missing or the request fails, an error is thrown so the UI
+ * If DUFFEL_API_KEY is missing or the request fails, an error is thrown so the UI
  * can notify the user via toast and inline error banners rather than displaying mock data.
  */
 
@@ -36,23 +35,32 @@ export type FlightSearchParams = z.infer<typeof searchParamsSchema>;
 export const searchFlights = createServerFn({ method: "GET" })
   .validator((raw: unknown) => searchParamsSchema.parse(raw))
   .handler(async ({ data: params }): Promise<FlightOffer[]> => {
-    // Dynamic import keeps kiwi.ts (and its secrets) out of the client bundle
-    const { fetchKiwiFlights, kiwiEnabled } = await import("./kiwi");
+    const { isDuffelConfigured } = await import("./duffel");
+    const { searchLiveFlights } = await import("./flights");
 
-    if (!kiwiEnabled()) {
+    if (!isDuffelConfigured()) {
       throw new Error(
-        "Live flight search is unavailable: KIWI_TEQUILA_API_KEY is not configured in environment variables.",
+        "Live flight search is unavailable: DUFFEL_API_KEY is not configured in environment variables.",
       );
     }
 
     try {
-      return await fetchKiwiFlights(params);
+      return await searchLiveFlights({
+        originIata: params.origin,
+        destinationIata: params.destination,
+        departureDate: params.departureDate,
+        returnDate: params.returnDate,
+        adults: params.adults,
+        cabinClass:
+          params.cabin === "premium" ? "premium_economy" : params.cabin,
+        currency: params.currency ?? "USD",
+      });
     } catch (err) {
-      console.error("[FlightIQ] Live Kiwi flight search failed:", err);
+      console.error("[FlightIQ] Live Duffel flight search failed:", err);
       const message =
         err instanceof Error
           ? err.message
-          : "Unable to retrieve live flight offers from Kiwi Tequila.";
+          : "Unable to retrieve live flight offers from Duffel API.";
       throw new Error(message);
     }
   });

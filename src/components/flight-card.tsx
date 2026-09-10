@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { TrendingDown, Sparkles, ExternalLink, Bell, Clock, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,7 +80,15 @@ const AIRLINE_THEMES: Record<string, { bg: string; text: string; border: string;
     },
   };
 
-function AirlineLogo({ code, name }: { code: string; name: string }) {
+function AirlineLogo({
+  code,
+  name,
+  logo,
+}: {
+  code: string;
+  name: string;
+  logo?: string | null;
+}) {
   const theme = AIRLINE_THEMES[code] ?? {
     bg: "bg-primary/15",
     text: "text-primary",
@@ -87,23 +96,35 @@ function AirlineLogo({ code, name }: { code: string; name: string }) {
     accent: "bg-primary",
   };
 
+  const [imgError, setImgError] = useState(false);
+
   return (
     <div
       className={cn(
-        "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border p-1 shadow-sm transition-transform group-hover:scale-105",
+        "relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border p-1 shadow-sm transition-transform group-hover:scale-105",
         theme.bg,
         theme.border,
       )}
       title={name}
     >
-      <div className="text-center">
-        <span className={cn("block text-xs font-black tracking-wider leading-none", theme.text)}>
-          {code}
-        </span>
-        <span className="block text-[8px] font-medium tracking-tight text-muted-foreground line-clamp-1 max-w-[36px]">
-          {name.split(" ")[0]}
-        </span>
-      </div>
+      {logo && !imgError ? (
+        <img
+          src={logo}
+          alt={name}
+          className="h-8 w-8 object-contain"
+          onError={() => setImgError(true)}
+          loading="lazy"
+        />
+      ) : (
+        <div className="text-center">
+          <span className={cn("block text-xs font-black tracking-wider leading-none", theme.text)}>
+            {code}
+          </span>
+          <span className="block text-[8px] font-medium tracking-tight text-muted-foreground line-clamp-1 max-w-[36px]">
+            {name.split(" ")[0]}
+          </span>
+        </div>
+      )}
       <div className={cn("absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full", theme.accent)} />
     </div>
   );
@@ -146,7 +167,11 @@ export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Prop
       {/* Top row: Airline info + Status Badges */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3.5">
-          <AirlineLogo code={offer.airlineCode} name={offer.airline} />
+          <AirlineLogo
+            code={offer.airlineCode}
+            name={offer.airline}
+            logo={offer.airlineLogo}
+          />
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold tracking-tight text-foreground sm:text-lg">
