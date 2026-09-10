@@ -56,6 +56,75 @@ export type Database = {
         };
         Relationships: [];
       };
+      price_trackers: {
+        Row: {
+          id: string;
+          created_at: string;
+          email: string | null;
+          telegram_chat_id: string | null;
+          origin_iata: string;
+          destination_iata: string;
+          departure_date: string;
+          return_date: string | null;
+          target_price: number | null;
+          currency: string;
+          is_active: boolean;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          email?: string | null;
+          telegram_chat_id?: string | null;
+          origin_iata: string;
+          destination_iata: string;
+          departure_date: string;
+          return_date?: string | null;
+          target_price?: number | null;
+          currency?: string;
+          is_active?: boolean;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          email?: string | null;
+          telegram_chat_id?: string | null;
+          origin_iata?: string;
+          destination_iata?: string;
+          departure_date?: string;
+          return_date?: string | null;
+          target_price?: number | null;
+          currency?: string;
+          is_active?: boolean;
+        };
+        Relationships: [];
+      };
+      flight_price_cache: {
+        Row: {
+          id: string;
+          route_key: string;
+          cheapest_price: number;
+          currency: string;
+          skyscanner_link: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          route_key: string;
+          cheapest_price: number;
+          currency: string;
+          skyscanner_link: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          route_key?: string;
+          cheapest_price?: number;
+          currency?: string;
+          skyscanner_link?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

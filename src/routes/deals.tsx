@@ -6,14 +6,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Bell, Mail, Send, Plane, LogOut, Plus } from "lucide-react";
+import {
+  Trash2,
+  Bell,
+  Mail,
+  Send,
+  Plane,
+  LogOut,
+  Plus,
+  Loader2,
+  Calendar,
+  CheckCircle2,
+  ArrowRight,
+} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useThemeStore } from "@/lib/store";
 import { initAnalytics, trackPageView } from "@/lib/analytics";
 import { formatPrice } from "@/lib/currency";
 import { useCurrencyStore } from "@/lib/store";
+import { findAirport } from "@/lib/airports";
 import { toast } from "sonner";
+import type { Session } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/deals")({
   head: () => ({
@@ -21,50 +35,61 @@ export const Route = createFileRoute("/deals")({
       { title: "My Tracked Deals — FlightIQ" },
       {
         name: "description",
-        content: "View and manage your flight price alerts.",
+        content: "View and manage your flight price alerts and notifications.",
       },
     ],
   }),
   component: DealsPage,
 });
 
-type Alert = {
+type PriceTrackerRow = {
   id: string;
-  origin: string;
-  destination: string;
-  route_label: string;
-  target_price_usd: number;
-  channel: "email" | "telegram";
+  created_at: string;
   email: string | null;
   telegram_chat_id: string | null;
-  last_price_usd: number | null;
+  origin_iata: string;
+  destination_iata: string;
+  departure_date: string;
+  return_date: string | null;
+  target_price: number | null;
+  currency: string;
   is_active: boolean;
-  created_at: string;
 };
 
 function DealsPage() {
   const { hydrate: hydrateTheme } = useThemeStore();
   const { currency } = useCurrencyStore();
-  const [session, setSession] = useState<null | { user: { email?: string } }>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [trackers, setTrackers] = useState<PriceTrackerRow[]>([]);
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // Magic Link auth state
+  const [emailInput, setEmailInput] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  const loadAlerts = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("price_alerts")
-      .select("*")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast.error("Could not load your alerts.");
-      return;
+  const loadTrackers = useCallback(async (userEmail?: string) => {
+    try {
+      let query = supabase
+        .from("price_trackers")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (userEmail) {
+        query = query.or(`email.eq.${userEmail}`);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        console.error("Error loading price trackers:", error);
+      } else if (data) {
+        setTrackers(data as PriceTrackerRow[]);
+      }
+    } catch (err) {
+      console.error(err);
     }
-    setAlerts((data ?? []) as Alert[]);
   }, []);
 
   useEffect(() => {
@@ -75,233 +100,361 @@ function DealsPage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
-      if (session) loadAlerts();
+      if (session?.user?.email) {
+        loadTrackers(session.user.email);
+      } else {
+        loadTrackers();
+      }
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      (async () => {
-        setSession(session);
-        if (session) {
-          await loadAlerts();
-        } else {
-          setAlerts([]);
-        }
-      })();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      if (newSession?.user?.email) {
+        loadTrackers(newSession.user.email);
+      } else {
+        setTrackers([]);
+      }
     });
 
-    return () => listener.subscription.unsubscribe();
-  }, [hydrateTheme, loadAlerts]);
+    return () => subscription.unsubscribe();
+  }, [hydrateTheme, loadTrackers]);
 
-  async function handleAuth() {
-    if (!email || !password) {
-      toast.error("Please enter your email and password.");
+  async function handleGoogleSignIn() {
+    setGoogleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        ...(typeof window !== "undefined"
+          ? {
+              options: {
+                redirectTo: window.location.origin,
+              },
+            }
+          : {}),
+      });
+      if (error) toast.error(error.message);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to connect to Google.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    if (!emailInput || !emailInput.includes("@")) {
+      toast.error("Please enter a valid email address.");
       return;
     }
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      return;
-    }
-
     setAuthLoading(true);
-    const { error } =
-      mode === "signin"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
-
-    setAuthLoading(false);
-
-    if (error) {
-      toast.error(
-        mode === "signin"
-          ? "Invalid email or password. Please try again."
-          : "Could not create account. " + error.message,
-      );
-      return;
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: emailInput.trim(),
+        ...(typeof window !== "undefined"
+          ? {
+              options: {
+                emailRedirectTo: window.location.origin,
+              },
+            }
+          : {}),
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        setMagicLinkSent(true);
+        toast.success("Magic link sent! Please check your email.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not send magic link.");
+    } finally {
+      setAuthLoading(false);
     }
-
-    if (mode === "signup") {
-      toast.success("Account created! You're now signed in.");
-    }
-    setEmail("");
-    setPassword("");
   }
 
   async function handleDelete(id: string) {
-    const { error } = await supabase.from("price_alerts").update({ is_active: false }).eq("id", id);
+    const { error } = await supabase
+      .from("price_trackers")
+      .update({ is_active: false })
+      .eq("id", id);
+
     if (error) {
-      toast.error("Could not delete alert.");
+      toast.error("Could not remove alert.");
       return;
     }
-    setAlerts((prev) => prev.filter((a) => a.id !== id));
-    toast.success("Alert removed.");
+    setTrackers((prev) => prev.filter((a) => a.id !== id));
+    toast.success("Price tracker deactivated.");
   }
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    setAlerts([]);
+    setTrackers([]);
     toast.success("Signed out.");
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        <Navbar />
-        <div className="flex items-center justify-center py-20">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="min-h-screen">
-        <Navbar />
-        <div className="mx-auto flex max-w-md flex-col items-center px-4 py-16">
-          <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg">
-            <Bell className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Track Your Flight Deals</h1>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            Sign in to save price alerts and get notified when fares drop.
-          </p>
-
-          <Card className="mt-8 w-full">
-            <CardHeader>
-              <CardTitle>{mode === "signin" ? "Welcome Back" : "Create Account"}</CardTitle>
-              <CardDescription>
-                {mode === "signin"
-                  ? "Sign in to manage your tracked deals."
-                  : "Create an account to start tracking flights."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1"
-                  placeholder="you@example.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1"
-                  placeholder="At least 6 characters"
-                />
-              </div>
-              <Button onClick={handleAuth} disabled={authLoading} className="w-full glow-cta">
-                {authLoading ? "Please wait..." : mode === "signin" ? "Sign In" : "Create Account"}
-              </Button>
-              <Separator />
-              <button
-                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-                className="w-full text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {mode === "signin"
-                  ? "Don't have an account? Sign up"
-                  : "Already have an account? Sign in"}
-              </button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">My Tracked Deals</h1>
-            <p className="text-sm text-muted-foreground">Signed in as {session.user.email}</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </Button>
-        </div>
 
-        {alerts.length === 0 ? (
-          <div className="glass-panel rounded-xl p-10 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-              <Bell className="h-6 w-6 text-primary" />
-            </div>
-            <h2 className="font-semibold text-foreground">No alerts yet</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Search for flights and click "Track" to create your first price alert.
-            </p>
-            <Button asChild className="mt-4">
-              <Link to="/">
-                <Plus className="h-4 w-4" />
-                Search Flights
-              </Link>
-            </Button>
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        {loading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        ) : (
-          <div className="space-y-3">
-            {alerts.map((alert) => (
-              <div key={alert.id} className="glass-panel rounded-xl p-4 sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      <Plane className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">{alert.route_label}</p>
-                      <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                        {alert.channel === "email" ? (
-                          <>
-                            <Mail className="h-3 w-3" />
-                            {alert.email}
-                          </>
-                        ) : (
-                          <>
-                            <Send className="h-3 w-3" />
-                            Telegram
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+        ) : !session ? (
+          /* Unauthenticated State: Sign in with Google or Magic Link */
+          <div className="mx-auto max-w-md py-12">
+            <Card className="glass-panel border-border/80 shadow-xl">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary shadow-sm">
+                  <Bell className="h-6 w-6" />
+                </div>
+                <CardTitle className="text-2xl font-bold tracking-tight">
+                  Track Your Flight Deals
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Sign in without passwords to view, manage, and receive alerts for your tracked
+                  routes.
+                </CardDescription>
+              </CardHeader>
 
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Target price</p>
-                      <p className="font-bold text-foreground">
-                        {formatPrice(alert.target_price_usd, currency)}
-                      </p>
-                      {alert.last_price_usd && (
-                        <p className="text-xs text-muted-foreground">
-                          Last: {formatPrice(alert.last_price_usd, currency)}
-                        </p>
-                      )}
-                    </div>
+              <CardContent className="space-y-4">
+                {magicLinkSent ? (
+                  <div className="space-y-3 py-3 text-center">
+                    <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
+                    <p className="text-sm font-semibold">Magic link on its way!</p>
+                    <p className="text-xs text-muted-foreground">
+                      We sent a one-click login link to <strong>{emailInput}</strong>.
+                    </p>
                     <Button
                       variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(alert.id)}
-                      className="text-muted-foreground hover:text-destructive"
+                      size="sm"
+                      onClick={() => setMagicLinkSent(false)}
+                      className="text-xs"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      Try different email
                     </Button>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleGoogleSignIn}
+                      disabled={googleLoading || authLoading}
+                      className="relative w-full border-border/80 bg-card hover:bg-accent"
+                    >
+                      {googleLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                          <path
+                            fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                          />
+                        </svg>
+                      )}
+                      Continue with Google
+                    </Button>
+
+                    <div className="relative flex items-center justify-center py-1">
+                      <div className="w-full border-t border-border" />
+                      <span className="absolute bg-card px-2 text-xs uppercase tracking-wider text-muted-foreground">
+                        Or magic link
+                      </span>
+                    </div>
+
+                    <form onSubmit={handleMagicLink} className="space-y-3">
+                      <div className="space-y-1">
+                        <Label htmlFor="deals-email" className="text-xs">
+                          Email address
+                        </Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            id="deals-email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={emailInput}
+                            onChange={(e) => setEmailInput(e.target.value)}
+                            className="pl-9 text-xs"
+                            required
+                            disabled={authLoading}
+                          />
+                        </div>
+                      </div>
+
+                      <Button
+                        type="submit"
+                        disabled={authLoading}
+                        className="w-full glow-cta gap-1.5"
+                      >
+                        {authLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            Send Magic Link
+                            <ArrowRight className="h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          /* Authenticated Tracked Deals List */
+          <div>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  My Tracked Deals
+                </h1>
+                <p className="text-xs text-muted-foreground">
+                  Signed in as <strong>{session.user.email}</strong> · Notifications will be sent
+                  when fares drop.
+                </p>
               </div>
-            ))}
+
+              <div className="flex items-center gap-2">
+                <Button asChild size="sm" className="glow-cta gap-1.5">
+                  <Link to="/">
+                    <Plus className="h-4 w-4" />
+                    <span>Track New Route</span>
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="gap-1.5 text-xs"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Sign Out</span>
+                </Button>
+              </div>
+            </div>
+
+            {trackers.length === 0 ? (
+              <Card className="glass-panel border-border/80 p-12 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Plane className="h-6 w-6" />
+                </div>
+                <h3 className="mt-4 text-base font-bold text-foreground">
+                  No active price trackers
+                </h3>
+                <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+                  Search for any flight and click <strong>"Set Price Alert"</strong> to start
+                  tracking fares in your local currency.
+                </p>
+                <Button asChild size="sm" className="mt-6 glow-cta">
+                  <Link to="/">Find Flights</Link>
+                </Button>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {trackers.map((tracker) => {
+                  const origAirport = findAirport(tracker.origin_iata);
+                  const dstAirport = findAirport(tracker.destination_iata);
+                  const isEmail = !!tracker.email;
+
+                  return (
+                    <div
+                      key={tracker.id}
+                      className="glass-panel group flex flex-col justify-between gap-4 rounded-2xl border border-border/80 p-5 transition-all hover:border-primary/40 hover:shadow-md sm:flex-row sm:items-center"
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
+                          <Plane className="h-5 w-5" />
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-base font-bold text-foreground">
+                              {tracker.origin_iata}
+                            </span>
+                            <span className="text-primary font-bold">→</span>
+                            <span className="font-mono text-base font-bold text-foreground">
+                              {tracker.destination_iata}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-muted-foreground">
+                            {origAirport ? origAirport.city : tracker.origin_iata} to{" "}
+                            {dstAirport ? dstAirport.city : tracker.destination_iata}
+                          </p>
+
+                          <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {tracker.departure_date}
+                              {tracker.return_date ? ` — ${tracker.return_date}` : ""}
+                            </span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              {isEmail ? (
+                                <>
+                                  <Mail className="h-3 w-3 text-primary" />
+                                  <span>{tracker.email}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="h-3 w-3 text-accent" />
+                                  <span>Telegram: {tracker.telegram_chat_id}</span>
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-5 border-t border-border/60 pt-3 sm:border-t-0 sm:pt-0">
+                        <div className="text-left sm:text-right">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            Target Price
+                          </p>
+                          <p className="text-xl font-extrabold text-foreground font-mono">
+                            {tracker.target_price
+                              ? `${tracker.currency} ${Number(tracker.target_price).toLocaleString()}`
+                              : "Any Price Drop"}
+                          </p>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(tracker.id)}
+                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          title="Delete Tracker"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

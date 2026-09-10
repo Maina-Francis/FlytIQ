@@ -1,4 +1,4 @@
-import { TrendingDown, Sparkles, ArrowRight, Bell } from "lucide-react";
+import { TrendingDown, Sparkles, ExternalLink, Bell, Clock, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice, getCurrency } from "@/lib/currency";
@@ -13,6 +13,101 @@ type Props = {
   currency: string;
   onTrackPrice: (offer: FlightOffer) => void;
 };
+
+// Airline brand styling helper
+const AIRLINE_THEMES: Record<string, { bg: string; text: string; border: string; accent: string }> =
+  {
+    KQ: {
+      bg: "bg-red-950/40",
+      text: "text-red-400",
+      border: "border-red-800/40",
+      accent: "bg-red-500",
+    },
+    EK: {
+      bg: "bg-amber-950/40",
+      text: "text-amber-300",
+      border: "border-amber-700/40",
+      accent: "bg-amber-400",
+    },
+    QR: {
+      bg: "bg-purple-950/40",
+      text: "text-purple-300",
+      border: "border-purple-800/40",
+      accent: "bg-purple-400",
+    },
+    TK: {
+      bg: "bg-rose-950/40",
+      text: "text-rose-400",
+      border: "border-rose-800/40",
+      accent: "bg-rose-500",
+    },
+    ET: {
+      bg: "bg-emerald-950/40",
+      text: "text-emerald-300",
+      border: "border-emerald-800/40",
+      accent: "bg-emerald-400",
+    },
+    BA: {
+      bg: "bg-blue-950/40",
+      text: "text-blue-300",
+      border: "border-blue-800/40",
+      accent: "bg-blue-500",
+    },
+    KL: {
+      bg: "bg-cyan-950/40",
+      text: "text-cyan-300",
+      border: "border-cyan-800/40",
+      accent: "bg-cyan-400",
+    },
+    LH: {
+      bg: "bg-indigo-950/40",
+      text: "text-yellow-400",
+      border: "border-yellow-700/40",
+      accent: "bg-yellow-400",
+    },
+    AF: {
+      bg: "bg-sky-950/40",
+      text: "text-sky-300",
+      border: "border-sky-800/40",
+      accent: "bg-red-500",
+    },
+    QF: {
+      bg: "bg-orange-950/40",
+      text: "text-orange-300",
+      border: "border-orange-800/40",
+      accent: "bg-orange-500",
+    },
+  };
+
+function AirlineLogo({ code, name }: { code: string; name: string }) {
+  const theme = AIRLINE_THEMES[code] ?? {
+    bg: "bg-primary/15",
+    text: "text-primary",
+    border: "border-primary/20",
+    accent: "bg-primary",
+  };
+
+  return (
+    <div
+      className={cn(
+        "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border p-1 shadow-sm transition-transform group-hover:scale-105",
+        theme.bg,
+        theme.border,
+      )}
+      title={name}
+    >
+      <div className="text-center">
+        <span className={cn("block text-xs font-black tracking-wider leading-none", theme.text)}>
+          {code}
+        </span>
+        <span className="block text-[8px] font-medium tracking-tight text-muted-foreground line-clamp-1 max-w-[36px]">
+          {name.split(" ")[0]}
+        </span>
+      </div>
+      <div className={cn("absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full", theme.accent)} />
+    </div>
+  );
+}
 
 export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Props) {
   function handleSelectDeal() {
@@ -34,87 +129,172 @@ export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Prop
     window.open(deepLink, "_blank", "noopener,noreferrer");
   }
 
-  const stopsLabel =
-    offer.stops === 0 ? "Nonstop" : offer.stops === 1 ? "1 Stop" : `${offer.stops} Stops`;
+  const isDirect = offer.stops === 0;
+  const stopoverText = isDirect
+    ? "Direct / Nonstop"
+    : offer.stops === 1
+      ? "1 Stopover"
+      : `${offer.stops} Stopovers`;
+
+  const isConvertedFromUsd = currency !== "USD";
 
   return (
-    <div className="glass-panel group rounded-xl p-4 transition-all hover:shadow-lg sm:p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-bold text-primary">
-            {offer.airlineCode}
-          </div>
+    <div className="glass-panel group relative overflow-hidden rounded-2xl border border-border/70 p-5 transition-all duration-200 hover:border-primary/40 hover:shadow-xl sm:p-6">
+      {/* Top row: Airline info + Status Badges */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3.5">
+          <AirlineLogo code={offer.airlineCode} name={offer.airline} />
           <div>
-            <p className="font-semibold text-foreground">{offer.airline}</p>
-            <p className="text-xs text-muted-foreground">{stopsLabel}</p>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold tracking-tight text-foreground sm:text-lg">
+                {offer.airline}
+              </h3>
+              <span className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground">
+                {offer.airlineCode}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+              <span>Cabin: {searchParams.cabin}</span>
+              <span>•</span>
+              <span className={cn(isDirect ? "text-success font-medium" : "text-muted-foreground")}>
+                {stopoverText}
+              </span>
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Highlight Badges */}
+        <div className="flex flex-wrap items-center gap-2">
           {offer.dropPercent > 0 && (
-            <Badge className="gap-1 bg-success/15 text-success hover:bg-success/20">
-              <TrendingDown className="h-3 w-3" />
-              {offer.dropPercent}% Drop
+            <Badge className="gap-1.5 bg-success/15 px-2.5 py-1 text-xs font-semibold text-success border-success/30 hover:bg-success/20">
+              <TrendingDown className="h-3.5 w-3.5" />
+              Price Drop (-{offer.dropPercent}%)
             </Badge>
           )}
           {offer.bestLocalFare && (
-            <Badge className="gap-1 bg-accent/15 text-accent hover:bg-accent/20">
-              <Sparkles className="h-3 w-3" />
+            <Badge className="gap-1.5 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
+              <Sparkles className="h-3.5 w-3.5" />
               Best Local Fare
             </Badge>
           )}
         </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-4">
-        <div className="text-center">
-          <p className="text-lg font-bold text-foreground">{offer.departTime}</p>
-          <p className="text-sm font-medium text-primary">{offer.origin}</p>
-        </div>
-
-        <div className="flex flex-1 flex-col items-center">
-          <p className="text-xs text-muted-foreground">{formatDuration(offer.durationMinutes)}</p>
-          <div className="relative my-1 h-px w-full bg-border">
-            <div className="absolute left-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-muted-foreground" />
-            <div className="absolute right-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-muted-foreground" />
+      {/* Middle row: Schedule and Timeline Visualizer */}
+      <div className="mt-6 grid grid-cols-1 items-center gap-4 rounded-xl bg-card/40 p-4 sm:grid-cols-[auto_1fr_auto]">
+        {/* Departure */}
+        <div className="text-left">
+          <p className="text-2xl font-extrabold tracking-tight text-foreground font-mono">
+            {offer.departTime}
+          </p>
+          <div className="mt-1 flex items-center gap-1.5">
+            <span className="inline-flex rounded-md bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold text-primary">
+              {offer.origin}
+            </span>
+            <span className="text-xs text-muted-foreground font-medium">Departure</span>
           </div>
-          <p className="text-xs text-muted-foreground">{stopsLabel}</p>
         </div>
 
-        <div className="text-center">
-          <p className="text-lg font-bold text-foreground">{offer.arriveTime}</p>
-          <p className="text-sm font-medium text-primary">{offer.destination}</p>
+        {/* Timeline Visualizer */}
+        <div className="flex flex-col items-center px-2">
+          <div className="mb-1.5 flex items-center gap-1 text-xs font-medium text-muted-foreground">
+            <Clock className="h-3.5 w-3.5" />
+            <span>{formatDuration(offer.durationMinutes)}</span>
+          </div>
+
+          <div className="relative flex w-full items-center justify-between">
+            {/* Origin Node */}
+            <div className="z-10 h-3 w-3 rounded-full border-2 border-primary bg-background shadow-sm" />
+
+            {/* Path line */}
+            <div className="relative mx-1 h-0.5 flex-1 bg-border group-hover:bg-primary/40 transition-colors">
+              {/* Mid-flight plane icon */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-card p-1 text-primary shadow-xs">
+                <Plane className="h-3.5 w-3.5 rotate-90" />
+              </div>
+            </div>
+
+            {/* Destination Node */}
+            <div className="z-10 h-3 w-3 rounded-full border-2 border-accent bg-accent shadow-sm" />
+          </div>
+
+          {/* Stopover badge in timeline */}
+          <div className="mt-1.5">
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors",
+                isDirect
+                  ? "bg-success/10 text-success"
+                  : "bg-amber-500/10 text-amber-400 font-medium",
+              )}
+            >
+              {stopoverText}
+            </span>
+          </div>
+        </div>
+
+        {/* Arrival */}
+        <div className="text-left sm:text-right">
+          <p className="text-2xl font-extrabold tracking-tight text-foreground font-mono">
+            {offer.arriveTime}
+          </p>
+          <div className="mt-1 flex items-center justify-start sm:justify-end gap-1.5">
+            <span className="text-xs text-muted-foreground font-medium">Arrival</span>
+            <span className="inline-flex rounded-md bg-accent/15 px-2 py-0.5 font-mono text-xs font-bold text-accent">
+              {offer.destination}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Bottom row: Price Display & Dual CTAs */}
+      <div className="mt-5 flex flex-col gap-4 border-t border-border/80 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Prominent Local Price Display with USD Subtitle */}
         <div>
           {offer.dropPercent > 0 && (
-            <p className="text-sm text-muted-foreground line-through">
-              {formatPrice(offer.baselineUsd, currency)}
+            <p className="text-xs text-muted-foreground line-through font-mono">
+              Regular: {formatPrice(offer.baselineUsd, currency)}
             </p>
           )}
-          <p className="text-2xl font-bold text-foreground">
-            {formatPrice(offer.priceUsd, currency)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            per passenger · {getCurrency(currency).code}
-          </p>
+
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black tracking-tight text-foreground">
+              {formatPrice(offer.priceUsd, currency)}
+            </span>
+            <span className="text-xs font-medium text-muted-foreground">/ passenger</span>
+          </div>
+
+          {/* Subtitle price in USD if converted */}
+          {isConvertedFromUsd && (
+            <p className="mt-0.5 text-xs font-medium text-muted-foreground">
+              ~ ${offer.priceUsd.toLocaleString()} USD · No hidden markup
+            </p>
+          )}
         </div>
 
-        <div className="flex gap-2">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5 sm:justify-end">
+          {/* Secondary CTA: Set Price Alert */}
           <Button
+            type="button"
             variant="outline"
-            size="sm"
+            size="default"
             onClick={() => onTrackPrice(offer)}
-            className="gap-1.5"
+            className="gap-2 rounded-xl border-border/80 bg-background/60 hover:bg-accent/60 font-medium"
           >
-            <Bell className="h-3.5 w-3.5" />
-            Track
+            <Bell className="h-4 w-4 text-primary" />
+            <span>Set Price Alert</span>
           </Button>
-          <Button onClick={handleSelectDeal} size="sm" className={cn("glow-cta gap-1.5")}>
-            Select Deal
-            <ArrowRight className="h-3.5 w-3.5" />
+
+          {/* Primary CTA: Book Deal */}
+          <Button
+            type="button"
+            onClick={handleSelectDeal}
+            size="default"
+            className="glow-cta gap-2 rounded-xl font-semibold shadow-md"
+          >
+            <span>Book Deal</span>
+            <ExternalLink className="h-4 w-4" />
           </Button>
         </div>
       </div>
