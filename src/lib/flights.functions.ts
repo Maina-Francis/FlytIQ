@@ -36,7 +36,7 @@ export const searchFlights = createServerFn({ method: "GET" })
   .validator((raw: unknown) => searchParamsSchema.parse(raw))
   .handler(async ({ data: params }): Promise<FlightOffer[]> => {
     const { isDuffelConfigured } = await import("./duffel");
-    const { searchLiveFlights } = await import("./flights");
+    const { searchLiveFlights } = await import("./flights.server");
 
     if (!isDuffelConfigured()) {
       throw new Error(
