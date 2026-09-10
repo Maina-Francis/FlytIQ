@@ -27,6 +27,8 @@ import { trackPriceAlertCreated } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+const TELEGRAM_BOT_USERNAME = "FlightIQBot";
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -60,17 +62,21 @@ export function AlertModal({
   const [telegramChatId, setTelegramChatId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const originAirport = findAirport(origin);
   const destAirport = findAirport(destination);
 
-  // Pre-fill email from active Supabase session
+  // Pre-fill email and capture user ID from active Supabase session
   useEffect(() => {
     if (open) {
       setSuccess(false);
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user?.email) {
           setEmail(session.user.email);
+        }
+        if (session?.user?.id) {
+          setUserId(session.user.id);
         }
       });
       // Suggest a 10% lower target price
@@ -178,6 +184,25 @@ export function AlertModal({
                 Alerts will be sent via {channel === "email" ? `Email (${email})` : "Telegram Bot"}.
               </p>
             </div>
+
+            {/* Connect Telegram CTA — shown after saving a Telegram tracker */}
+            {channel === "telegram" && (
+              <a
+                href={
+                  userId
+                    ? `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${userId}`
+                    : `https://t.me/${TELEGRAM_BOT_USERNAME}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#229ED9] px-4 py-2.5 text-sm font-bold text-white shadow-md transition-opacity hover:opacity-90"
+              >
+                <Send className="h-4 w-4" />
+                Connect @{TELEGRAM_BOT_USERNAME} on Telegram
+                <ExternalLink className="h-3.5 w-3.5 opacity-75" />
+              </a>
+            )}
+
             <Button onClick={() => onOpenChange(false)} className="w-full glow-cta mt-2">
               Done
             </Button>
