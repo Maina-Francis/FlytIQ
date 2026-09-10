@@ -13,4 +13,11 @@ export default defineConfig({
     }),
     viteReact(),
   ],
+  server: {
+    headers: {
+      // Allow unload event listeners used by Supabase auth for session persistence
+      "Permissions-Policy": "unload=(self)",
+    },
+  },
 });
+
