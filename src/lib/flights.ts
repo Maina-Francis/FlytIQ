@@ -8,7 +8,17 @@ export type SearchParams = {
   tripType: "round" | "oneway";
   adults: number;
   cabin: "economy" | "premium" | "business" | "first";
+  currency?: string;
 };
+
+/** Maps our internal cabin keys to Kiwi selected_cabins codes (M=Economy, W=Premium Economy, C=Business, F=First). */
+export const CABIN_TO_KIWI: Record<SearchParams["cabin"], string> = {
+  economy: "M",
+  premium: "W",
+  business: "C",
+  first: "F",
+};
+
 
 export type FlightOffer = {
   id: string;
@@ -26,6 +36,7 @@ export type FlightOffer = {
   origin: string;
   destination: string;
   bestLocalFare: boolean;
+  deepLink?: string;
 };
 
 const AIRLINES = [

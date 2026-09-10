@@ -111,15 +111,17 @@ function AirlineLogo({ code, name }: { code: string; name: string }) {
 
 export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Props) {
   function handleSelectDeal() {
-    const deepLink = buildSkyscannerDeepLink({
-      origin: offer.origin,
-      destination: offer.destination,
-      departureDate: searchParams.departureDate,
-      returnDate: searchParams.returnDate,
-      adults: searchParams.adults,
-      cabin: searchParams.cabin,
-      currency,
-    });
+    const deepLink =
+      offer.deepLink ||
+      buildSkyscannerDeepLink({
+        origin: offer.origin,
+        destination: offer.destination,
+        departureDate: searchParams.departureDate,
+        returnDate: searchParams.returnDate,
+        adults: searchParams.adults,
+        cabin: searchParams.cabin,
+        currency,
+      });
     trackAffiliateClick({
       airline: offer.airline,
       price: offer.priceUsd,

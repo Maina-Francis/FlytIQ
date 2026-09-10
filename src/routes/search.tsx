@@ -1,5 +1,6 @@
 import { createFileRoute, useSearch, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
 import { FlightCard } from "@/components/flight-card";
 import { AlertModal } from "@/components/alert-modal";
@@ -8,7 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { generateOffers, type FlightOffer, type SearchParams } from "@/lib/flights";
+import { searchFlights } from "@/lib/flights.functions";
+import { type FlightOffer, type SearchParams } from "@/lib/flights";
 import { useCurrencyStore, useThemeStore } from "@/lib/store";
 import { initAnalytics, trackPageView } from "@/lib/analytics";
 import { findAirport } from "@/lib/airports";
@@ -26,8 +28,56 @@ import {
   Sun,
   Sunset,
   Moon,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ─── Loading Skeleton ─────────────────────────────────────────────────────────
+
+function FlightCardSkeleton() {
+  return (
+    <div className="glass-panel rounded-2xl border border-border/70 p-5 sm:p-6 animate-pulse">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3.5">
+          <div className="h-12 w-12 rounded-xl bg-muted/60 shrink-0" />
+          <div className="space-y-2">
+            <div className="h-4 w-32 rounded bg-muted/60" />
+            <div className="h-3 w-24 rounded bg-muted/40" />
+          </div>
+        </div>
+        <div className="h-6 w-28 rounded-full bg-muted/40" />
+      </div>
+      <div className="mt-6 rounded-xl bg-card/40 p-4">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4">
+          <div className="space-y-2">
+            <div className="h-7 w-16 rounded bg-muted/60" />
+            <div className="h-4 w-12 rounded bg-muted/40" />
+          </div>
+          <div className="flex flex-col items-center gap-2 px-2">
+            <div className="h-3 w-24 rounded bg-muted/40" />
+            <div className="h-0.5 w-full rounded bg-muted/50" />
+            <div className="h-5 w-16 rounded-full bg-muted/40" />
+          </div>
+          <div className="space-y-2 text-right">
+            <div className="h-7 w-16 rounded bg-muted/60" />
+            <div className="h-4 w-12 rounded bg-muted/40" />
+          </div>
+        </div>
+      </div>
+      <div className="mt-5 flex items-center justify-between border-t border-border/80 pt-4">
+        <div className="space-y-2">
+          <div className="h-8 w-32 rounded bg-muted/60" />
+          <div className="h-3 w-24 rounded bg-muted/40" />
+        </div>
+        <div className="flex gap-2">
+          <div className="h-9 w-32 rounded-xl bg-muted/50" />
+          <div className="h-9 w-28 rounded-xl bg-primary/30" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/search")({
   head: () => ({
@@ -69,11 +119,26 @@ function SearchPage() {
       tripType: search.tripType || "round",
       adults: Number(search.adults) || 1,
       cabin: search.cabin || "economy",
+      currency: currency || "USD",
     }),
-    [search],
+    [search, currency],
   );
 
-  const offers = useMemo(() => generateOffers(searchParams), [searchParams]);
+  // ── Live flight fetch via TanStack Query + server function ──
+  const {
+    data: offers = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["flights", searchParams],
+    queryFn: () => searchFlights({ data: searchParams }),
+    staleTime: 5 * 60 * 1000, // cache results for 5 minutes
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+  });
+
 
   // Sort State: "Cheapest" | "Fastest" | "Best Value"
   const [activeSort, setActiveSort] = useState<SortTab>("cheapest");
@@ -513,11 +578,14 @@ function SearchPage() {
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  {sortedOffers.length} {sortedOffers.length === 1 ? "flight deal" : "flight deals"}{" "}
-                  available
+                  {isLoading
+                    ? "Searching live fares…"
+                    : `${sortedOffers.length} ${sortedOffers.length === 1 ? "flight deal" : "flight deals"} available`}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  All fares include taxes and airline booking fees. Real-time partner pricing.
+                  {isLoading
+                    ? "Checking airlines and prices in real time."
+                    : "All fares include taxes and airline booking fees. Real-time partner pricing."}
                 </p>
               </div>
 
@@ -568,7 +636,39 @@ function SearchPage() {
             </div>
 
             {/* Flight Cards List */}
-            {sortedOffers.length === 0 ? (
+            {isLoading ? (
+              // ── Loading: shimmer skeletons ──────────────────────────────
+              <div className="space-y-4">
+                <FlightCardSkeleton />
+                <FlightCardSkeleton />
+                <FlightCardSkeleton />
+              </div>
+            ) : isError ? (
+              // ── Error: fetch failed ────────────────────────────────────
+              <div className="glass-panel rounded-2xl border border-destructive/30 bg-destructive/5 p-12 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                  <AlertCircle className="h-6 w-6" />
+                </div>
+                <h3 className="mt-4 text-base font-bold text-foreground">
+                  Couldn't fetch flights
+                </h3>
+                <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                  {error instanceof Error
+                    ? error.message
+                    : "Something went wrong while searching for flights. Please try again."}
+                </p>
+                <Button
+                  onClick={() => refetch()}
+                  variant="outline"
+                  size="sm"
+                  className="mt-5 gap-2"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Retry search
+                </Button>
+              </div>
+            ) : sortedOffers.length === 0 ? (
+              // ── Empty: no results (filters or no flights on route) ─────
               <div className="glass-panel rounded-2xl border border-border/80 p-12 text-center shadow-xs">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <Plane className="h-6 w-6 rotate-45" />
@@ -577,14 +677,20 @@ function SearchPage() {
                   No flights match your filters
                 </h3>
                 <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                  Try broadening your stops, departure time, or price range to view available
-                  airline deals.
+                  Try broadening your stops, departure time, or price range to
+                  view available airline deals.
                 </p>
-                <Button onClick={handleResetFilters} variant="outline" size="sm" className="mt-5">
+                <Button
+                  onClick={handleResetFilters}
+                  variant="outline"
+                  size="sm"
+                  className="mt-5"
+                >
                   Reset all filters
                 </Button>
               </div>
             ) : (
+              // ── Results ────────────────────────────────────────────────
               <div className="space-y-4">
                 {sortedOffers.map((offer) => (
                   <FlightCard
