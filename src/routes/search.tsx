@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
 import { FlightCard } from "@/components/flight-card";
 import { AlertModal } from "@/components/alert-modal";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
@@ -139,6 +140,17 @@ function SearchPage() {
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
   });
 
+  // Notify user via toast on live search failure
+  useEffect(() => {
+    if (isError && error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch live flight offers. Please check your connection and try again.",
+        { id: "flight-search-error", duration: 6000 },
+      );
+    }
+  }, [isError, error]);
 
   // Sort State: "Cheapest" | "Fastest" | "Best Value"
   const [activeSort, setActiveSort] = useState<SortTab>("cheapest");
@@ -667,11 +679,32 @@ function SearchPage() {
                   Retry search
                 </Button>
               </div>
-            ) : sortedOffers.length === 0 ? (
-              // ── Empty: no results (filters or no flights on route) ─────
+            ) : offers.length === 0 ? (
+              // ── Empty: Kiwi returned 0 live flights on route ───────────
               <div className="glass-panel rounded-2xl border border-border/80 p-12 text-center shadow-xs">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <Plane className="h-6 w-6 rotate-45" />
+                </div>
+                <h3 className="mt-4 text-base font-bold text-foreground">
+                  No live flights found
+                </h3>
+                <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+                  No live flights were found for {originAirport?.name ?? searchParams.origin} (
+                  {searchParams.origin}) to {destAirport?.name ?? searchParams.destination} (
+                  {searchParams.destination}) on {searchParams.departureDate}. Try searching with different dates or nearby airports.
+                </p>
+                <Link to="/">
+                  <Button variant="outline" size="sm" className="mt-5 gap-2">
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Modify search
+                  </Button>
+                </Link>
+              </div>
+            ) : sortedOffers.length === 0 ? (
+              // ── Empty: user filters eliminated all results ─────────────
+              <div className="glass-panel rounded-2xl border border-border/80 p-12 text-center shadow-xs">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <SlidersHorizontal className="h-6 w-6" />
                 </div>
                 <h3 className="mt-4 text-base font-bold text-foreground">
                   No flights match your filters

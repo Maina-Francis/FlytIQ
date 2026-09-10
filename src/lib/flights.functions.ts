@@ -1,16 +1,15 @@
 /**
  * flights.functions.ts
  * TanStack Start server function: fetches live flight offers from the Kiwi
- * Tequila API, falling back to the deterministic mock generator when the API
- * key is absent (e.g. during local development without credentials).
+ * Tequila API.
  *
- * Called from the client via useQuery — TanStack Start handles the
- * server/client boundary automatically.
+ * If credentials are missing or the request fails, an error is thrown so the UI
+ * can notify the user via toast and inline error banners rather than displaying mock data.
  */
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { generateOffers, type FlightOffer } from "./flights";
+import type { FlightOffer } from "./flights";
 
 // ─── Input Validation Schema ──────────────────────────────────────────────────
 
@@ -26,6 +25,7 @@ const searchParamsSchema = z.object({
   tripType: z.enum(["round", "oneway"]),
   adults: z.number().int().min(1).max(9),
   cabin: z.enum(["economy", "premium", "business", "first"]),
+  cabinClass: z.string().optional(),
   currency: z.string().optional(),
 });
 
@@ -39,18 +39,20 @@ export const searchFlights = createServerFn({ method: "GET" })
     // Dynamic import keeps kiwi.ts (and its secrets) out of the client bundle
     const { fetchKiwiFlights, kiwiEnabled } = await import("./kiwi");
 
-    if (kiwiEnabled()) {
-      try {
-        const offers = await fetchKiwiFlights(params);
-        if (offers.length > 0) return offers;
-        // Kiwi returned 0 results (e.g. no flights for that route/date)
-        console.warn("[FlightIQ] Kiwi returned 0 offers — using mock fallback.");
-      } catch (err) {
-        console.error("[FlightIQ] Kiwi search failed:", err);
-        console.warn("[FlightIQ] Falling back to mock flight generator.");
-      }
+    if (!kiwiEnabled()) {
+      throw new Error(
+        "Live flight search is unavailable: KIWI_TEQUILA_API_KEY is not configured in environment variables.",
+      );
     }
 
-    // Mock fallback — always works, no credentials needed
-    return generateOffers(params);
+    try {
+      return await fetchKiwiFlights(params);
+    } catch (err) {
+      console.error("[FlightIQ] Live Kiwi flight search failed:", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Unable to retrieve live flight offers from Kiwi Tequila.";
+      throw new Error(message);
+    }
   });
