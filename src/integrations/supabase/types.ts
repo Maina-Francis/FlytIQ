@@ -14,7 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      price_trackers: {
+        Row: {
+          created_at: string
+          currency: string
+          departure_date: string
+          destination_iata: string
+          email: string | null
+          id: string
+          is_active: boolean
+          last_notified_at: string | null
+          last_seen_price: number | null
+          origin_iata: string
+          return_date: string | null
+          target_price: number | null
+          telegram_chat_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          departure_date: string
+          destination_iata: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          last_notified_at?: string | null
+          last_seen_price?: number | null
+          origin_iata: string
+          return_date?: string | null
+          target_price?: number | null
+          telegram_chat_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          departure_date?: string
+          destination_iata?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          last_notified_at?: string | null
+          last_seen_price?: number | null
+          origin_iata?: string
+          return_date?: string | null
+          target_price?: number | null
+          telegram_chat_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          telegram_chat_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          telegram_chat_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          telegram_chat_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

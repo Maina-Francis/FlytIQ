@@ -145,30 +145,41 @@ function Index() {
 
       {/* ─── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden px-4 pb-20 pt-16 sm:px-6 sm:pt-24 lg:px-8">
+        {/* Ambient mint glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-primary/10 blur-[120px]"
+        />
         <div className="mx-auto max-w-5xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary backdrop-blur">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
             Live fare tracking across 30+ airports
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            Track Flight Prices.
+          <h1 className="font-display text-5xl font-bold tracking-tighter text-foreground sm:text-6xl lg:text-7xl lg:leading-[0.95]">
+            Track flight prices.
             <br />
-            <span className="text-gradient-brand">Never Overpay Again.</span>
+            <span className="text-primary italic">Never overpay again.</span>
           </h1>
 
-          <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
+          <p className="mx-auto mt-6 max-w-xl text-base text-muted-foreground sm:text-lg">
             Search flights, set price drop alerts, and book directly with the airline. No hidden
             fees, no middleman — just the best fares in your local currency, delivered to your
             inbox or Telegram.
           </p>
         </div>
 
-        <div className="mx-auto mt-10 max-w-3xl">
-          <SearchWidget />
+        <div className="relative mx-auto mt-12 max-w-3xl">
+          <div
+            aria-hidden
+            className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary/25 to-coral/25 blur-lg"
+          />
+          <div className="glow-ring relative">
+            <SearchWidget />
+          </div>
         </div>
       </section>
 
@@ -176,12 +187,15 @@ function Index() {
       <section className="px-4 pb-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-3">
           {FEATURES.map((feature) => (
-            <div key={feature.title} className="glass-panel rounded-xl p-5">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <div
+              key={feature.title}
+              className="group glass-panel rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40"
+            >
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 transition-colors group-hover:bg-primary/25">
                 <feature.icon className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="font-semibold text-foreground">{feature.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{feature.desc}</p>
+              <h3 className="font-display text-lg font-bold text-foreground">{feature.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{feature.desc}</p>
             </div>
           ))}
         </div>
@@ -203,19 +217,21 @@ function Index() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {STEPS.map((step, i) => (
               <div key={step.title} className="relative">
-                <div className="glass-panel rounded-2xl p-6 text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
-                    <step.icon className="h-7 w-7 text-primary" />
+                <div className="glass-panel h-full rounded-2xl p-7 transition-all duration-300 hover:border-primary/40">
+                  <div className="mb-5 flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15">
+                      <step.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <span className="font-display text-xs font-bold uppercase tracking-widest text-coral">
+                      0{i + 1}
+                    </span>
                   </div>
-                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">
-                    Step {i + 1}
-                  </div>
-                  <h3 className="text-base font-bold text-foreground">{step.title}</h3>
+                  <h3 className="font-display text-lg font-bold text-foreground">{step.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-primary/40 sm:block">
-                    <ArrowRight className="h-6 w-6" />
+                  <div className="absolute -right-4 top-1/2 z-10 hidden -translate-y-1/2 text-primary/50 sm:block">
+                    <ArrowRight className="h-5 w-5" />
                   </div>
                 )}
               </div>
@@ -230,10 +246,10 @@ function Index() {
           <div className="glass-panel overflow-hidden rounded-2xl">
             <div className="grid grid-cols-1 gap-8 p-8 sm:p-10 lg:grid-cols-2">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-4xl">
                   Flight prices change constantly.
                   <br />
-                  <span className="text-gradient-brand">We watch them for you.</span>
+                  <span className="text-primary italic">We watch them for you.</span>
                 </h2>
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                   Airline fares fluctuate due to demand, seasonality, seat availability, and
@@ -293,8 +309,8 @@ function Index() {
                           26% below your target
                         </span>
                       </div>
-                      <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-center">
-                        <span className="text-xs font-bold text-primary">Book on Skyscanner →</span>
+                      <div className="mt-3 rounded-lg bg-coral/15 px-3 py-2 text-center">
+                        <span className="text-xs font-bold text-coral">Book on Skyscanner →</span>
                       </div>
                     </div>
                   </div>
