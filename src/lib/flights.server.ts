@@ -22,6 +22,9 @@ async function computePriceDrops(
   departureDate: string,
 ): Promise<Map<string, number>> {
   const dropMap = new Map<string, number>();
+  if (!process.env["SUPABASE_SERVICE_ROLE_KEY"]) {
+    return dropMap;
+  }
 
   try {
     const routeKeys = [
