@@ -165,44 +165,39 @@ export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Prop
   return (
     <div className="glass-panel group relative overflow-hidden rounded-2xl border border-border/70 p-5 transition-all duration-200 hover:border-primary/40 hover:shadow-xl sm:p-6">
       {/* Top row: Airline info + Status Badges */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3.5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <AirlineLogo
             code={offer.airlineCode}
             name={offer.airline}
             logo={offer.airlineLogo}
           />
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold tracking-tight text-foreground sm:text-lg">
-                {offer.airline}
-              </h3>
-              <span className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-mono font-medium text-muted-foreground">
-                {offer.airlineCode}
-              </span>
-            </div>
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-bold tracking-tight text-foreground sm:text-base">
+              {offer.airline}
+            </h3>
             <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-              <span>Cabin: {searchParams.cabin}</span>
-              <span>•</span>
-              <span className={cn(isDirect ? "text-success font-medium" : "text-muted-foreground")}>
+              <span className={cn("font-medium", isDirect ? "text-success" : "text-muted-foreground")}>
                 {stopoverText}
               </span>
+              <span>•</span>
+              <span className="capitalize">{searchParams.cabin}</span>
             </p>
           </div>
         </div>
 
         {/* Highlight Badges */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {offer.dropPercent > 0 && (
-            <Badge className="gap-1.5 bg-success/15 px-2.5 py-1 text-xs font-semibold text-success border-success/30 hover:bg-success/20">
-              <TrendingDown className="h-3.5 w-3.5" />
-              Price Drop (-{offer.dropPercent}%)
+            <Badge className="gap-1 bg-success/15 px-2 py-0.5 text-[11px] font-semibold text-success border-success/30 hover:bg-success/20">
+              <TrendingDown className="h-3 w-3" />
+              -{offer.dropPercent}%
             </Badge>
           )}
           {offer.bestLocalFare && (
-            <Badge className="gap-1.5 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
-              <Sparkles className="h-3.5 w-3.5" />
-              Best Local Fare
+            <Badge className="gap-1 bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20">
+              <Sparkles className="h-3 w-3" />
+              Best Fare
             </Badge>
           )}
         </div>
@@ -276,53 +271,48 @@ export function FlightCard({ offer, searchParams, currency, onTrackPrice }: Prop
       </div>
 
       {/* Bottom row: Price Display & Dual CTAs */}
-      <div className="mt-5 flex flex-col gap-4 border-t border-border/80 pt-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Prominent Local Price Display with USD Subtitle */}
+      <div className="mt-5 flex flex-col gap-4 border-t border-border/80 pt-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           {offer.dropPercent > 0 && (
             <p className="text-xs text-muted-foreground line-through font-mono">
-              Regular: {formatPrice(offer.baselineUsd, currency)}
+              {formatPrice(offer.baselineUsd, currency)}
             </p>
           )}
 
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black tracking-tight text-foreground">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-4xl font-black tracking-tight text-foreground">
               {formatPrice(offer.priceUsd, currency)}
             </span>
-            <span className="text-xs font-medium text-muted-foreground">/ passenger</span>
+            <span className="text-xs font-medium text-muted-foreground">/ pax</span>
           </div>
 
-          {/* Subtitle price in USD if converted */}
           {isConvertedFromUsd && (
-            <p className="mt-0.5 text-xs font-medium text-muted-foreground">
-              ~ ${offer.priceUsd.toLocaleString()} USD · No hidden markup
+            <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+              ~ ${offer.priceUsd.toLocaleString()} USD · No markup
             </p>
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5 sm:justify-end">
-          {/* Secondary CTA: Set Price Alert */}
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <Button
             type="button"
             variant="outline"
-            size="default"
+            size="sm"
             onClick={() => onTrackPrice(offer)}
-            className="gap-2 rounded-xl border-border/80 bg-background/60 hover:bg-accent/60 font-medium"
+            className="gap-1.5 rounded-xl border-border/80 bg-background/60 hover:bg-accent/60 font-medium"
           >
-            <Bell className="h-4 w-4 text-primary" />
-            <span>Set Price Alert</span>
+            <Bell className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs">Set Alert</span>
           </Button>
 
-          {/* Primary CTA: Book Deal */}
           <Button
             type="button"
             onClick={handleSelectDeal}
-            size="default"
-            className="glow-cta gap-2 rounded-xl font-semibold shadow-md"
+            size="sm"
+            className="glow-cta gap-1.5 rounded-xl font-semibold shadow-md"
           >
-            <span>Book Deal</span>
-            <ExternalLink className="h-4 w-4" />
+            <span className="text-xs">Book Deal</span>
+            <ExternalLink className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>

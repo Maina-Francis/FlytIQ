@@ -31,8 +31,15 @@ import {
   Moon,
   AlertCircle,
   RefreshCw,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 // ─── Loading Skeleton ─────────────────────────────────────────────────────────
 
@@ -160,7 +167,7 @@ function SearchPage() {
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<TimeOfDay>("all");
   const [selectedAirlines, setSelectedAirlines] = useState<Set<string>>(new Set());
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Price Alert Modal State
   const [alertOpen, setAlertOpen] = useState(false);
@@ -332,7 +339,7 @@ function SearchPage() {
               variant="outline"
               size="sm"
               className="lg:hidden gap-1.5"
-              onClick={() => setShowMobileFilters((v) => !v)}
+              onClick={() => setMobileFiltersOpen(true)}
             >
               <Filter className="h-4 w-4" />
               <span>Filters ({filteredOffers.length})</span>
@@ -356,8 +363,8 @@ function SearchPage() {
       {/* Main Content Grid: Sidebar + Results */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
-          {/* Filter Sidebar */}
-          <aside className={cn("space-y-6", showMobileFilters ? "block" : "hidden lg:block")}>
+          {/* Filter Sidebar — Desktop */}
+          <aside className="hidden space-y-6 lg:block">
             <div className="glass-panel sticky top-24 rounded-2xl border border-border/80 p-5 shadow-sm">
               <div className="mb-5 flex items-center justify-between">
                 <div className="flex items-center gap-2 font-bold text-foreground">
@@ -583,6 +590,245 @@ function SearchPage() {
               </div>
             </div>
           </aside>
+
+          {/* Filter Drawer — Mobile */}
+          <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen} direction="bottom">
+            <DrawerContent className="max-h-[85vh]">
+              <DrawerHeader className="flex flex-row items-center justify-between text-left">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4 text-primary" />
+                  <DrawerTitle className="text-base font-bold">Filter Flights</DrawerTitle>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    <span>Reset</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileFiltersOpen(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </DrawerHeader>
+              <div className="overflow-y-auto px-4 pb-6">
+                <div className="space-y-6">
+                  {/* Stops Filter */}
+                  <div>
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Stops
+                    </Label>
+                    <div className="mt-2.5 grid grid-cols-3 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStops("all")}
+                        className={cn(
+                          "rounded-lg border px-2.5 py-2 text-center text-xs font-medium transition-all",
+                          selectedStops === "all"
+                            ? "border-primary bg-primary/15 font-semibold text-primary"
+                            : "border-border bg-card/50 text-muted-foreground hover:bg-accent",
+                        )}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStops("direct")}
+                        className={cn(
+                          "rounded-lg border px-2.5 py-2 text-center text-xs font-medium transition-all",
+                          selectedStops === "direct"
+                            ? "border-primary bg-primary/15 font-semibold text-primary"
+                            : "border-border bg-card/50 text-muted-foreground hover:bg-accent",
+                        )}
+                      >
+                        Direct
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStops("1stop")}
+                        className={cn(
+                          "rounded-lg border px-2.5 py-2 text-center text-xs font-medium transition-all",
+                          selectedStops === "1stop"
+                            ? "border-primary bg-primary/15 font-semibold text-primary"
+                            : "border-border bg-card/50 text-muted-foreground hover:bg-accent",
+                        )}
+                      >
+                        1 Stop
+                      </button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Departure Time Range */}
+                  <div>
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Departure Time
+                    </Label>
+                    <div className="mt-2.5 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedTimeOfDay(selectedTimeOfDay === "morning" ? "all" : "morning")
+                        }
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg border p-2 text-left text-xs transition-all",
+                          selectedTimeOfDay === "morning"
+                            ? "border-primary bg-primary/15 font-semibold text-primary"
+                            : "border-border bg-card/50 text-muted-foreground hover:bg-accent",
+                        )}
+                      >
+                        <Sun className="h-3.5 w-3.5 shrink-0" />
+                        <div>
+                          <p className="font-medium text-foreground">Morning</p>
+                          <p className="text-[10px] text-muted-foreground">06:00 - 12:00</p>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedTimeOfDay(selectedTimeOfDay === "afternoon" ? "all" : "afternoon")
+                        }
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg border p-2 text-left text-xs transition-all",
+                          selectedTimeOfDay === "afternoon"
+                            ? "border-primary bg-primary/15 font-semibold text-primary"
+                            : "border-border bg-card/50 text-muted-foreground hover:bg-accent",
+                        )}
+                      >
+                        <Sunset className="h-3.5 w-3.5 shrink-0" />
+                        <div>
+                          <p className="font-medium text-foreground">Afternoon</p>
+                          <p className="text-[10px] text-muted-foreground">12:00 - 18:00</p>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedTimeOfDay(selectedTimeOfDay === "evening" ? "all" : "evening")
+                        }
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg border p-2 text-left text-xs transition-all",
+                          selectedTimeOfDay === "evening"
+                            ? "border-primary bg-primary/15 font-semibold text-primary"
+                            : "border-border bg-card/50 text-muted-foreground hover:bg-accent",
+                        )}
+                      >
+                        <Moon className="h-3.5 w-3.5 shrink-0" />
+                        <div>
+                          <p className="font-medium text-foreground">Evening</p>
+                          <p className="text-[10px] text-muted-foreground">18:00 - 24:00</p>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedTimeOfDay(selectedTimeOfDay === "night" ? "all" : "night")
+                        }
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg border p-2 text-left text-xs transition-all",
+                          selectedTimeOfDay === "night"
+                            ? "border-primary bg-primary/15 font-semibold text-primary"
+                            : "border-border bg-card/50 text-muted-foreground hover:bg-accent",
+                        )}
+                      >
+                        <Clock className="h-3.5 w-3.5 shrink-0" />
+                        <div>
+                          <p className="font-medium text-foreground">Night</p>
+                          <p className="text-[10px] text-muted-foreground">00:00 - 06:00</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Price Range Slider */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Price Range
+                      </Label>
+                      <span className="text-xs font-mono font-bold text-foreground">
+                        {formatPrice(priceRange[1] / currencyRate, currency)}
+                      </span>
+                    </div>
+                    <div className="mt-3.5">
+                      <Slider
+                        minStepsBetweenThumbs={1}
+                        min={minOfferPrice}
+                        max={maxOfferPrice}
+                        step={Math.max(1, Math.floor((maxOfferPrice - minOfferPrice) / 100))}
+                        value={priceRange}
+                        onValueChange={(val) =>
+                          setPriceRange([val[0] ?? minOfferPrice, val[1] ?? maxOfferPrice])
+                        }
+                        className="my-3"
+                      />
+                      <div className="flex justify-between text-[11px] font-medium text-muted-foreground">
+                        <span>{formatPrice(priceRange[0] / currencyRate, currency)}</span>
+                        <span>{formatPrice(priceRange[1] / currencyRate, currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Airlines */}
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Airlines
+                      </Label>
+                      {selectedAirlines.size > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedAirlines(new Set())}
+                          className="text-[11px] font-medium text-primary hover:underline"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+                      {airlinesWithCounts.map(([code, { name, count }]) => (
+                        <label
+                          key={code}
+                          className="flex cursor-pointer items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-accent/50 text-xs"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Checkbox
+                              checked={selectedAirlines.has(code)}
+                              onCheckedChange={() => toggleAirline(code)}
+                            />
+                            <span className="font-semibold text-foreground">{code}</span>
+                            <span className="text-muted-foreground line-clamp-1">{name}</span>
+                          </div>
+                          <span className="font-mono text-[11px] text-muted-foreground">
+                            ({count})
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => setMobileFiltersOpen(false)}
+                    className="w-full glow-cta"
+                  >
+                    Show {filteredOffers.length} {filteredOffers.length === 1 ? "flight" : "flights"}
+                  </Button>
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
 
           {/* Results Column */}
           <div>

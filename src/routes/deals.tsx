@@ -18,6 +18,9 @@ import {
   Calendar,
   CheckCircle2,
   ArrowRight,
+  TrendingDown,
+  Clock,
+  Target,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +57,8 @@ type PriceTrackerRow = {
   target_price: number | null;
   currency: string;
   is_active: boolean;
+  last_seen_price: number | null;
+  last_notified_at: string | null;
 };
 
 function DealsPage() {
@@ -448,16 +453,48 @@ function DealsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-5 border-t border-border/60 pt-3 sm:border-t-0 sm:pt-0">
+                      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-5 border-t border-border/60 pt-3 sm:border-t-0 sm:pt-0">
+                        {tracker.last_seen_price !== null && (
+                          <div className="text-left sm:text-right">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                              Current Best
+                            </p>
+                            <p className="text-lg font-bold text-foreground font-mono">
+                              {tracker.currency} {Number(tracker.last_seen_price).toLocaleString()}
+                            </p>
+                            {tracker.target_price !== null && Number(tracker.last_seen_price) <= Number(tracker.target_price) ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success">
+                                <TrendingDown className="h-3 w-3" />
+                                At target!
+                              </span>
+                            ) : tracker.target_price !== null ? (
+                              <span className="text-[10px] text-muted-foreground">
+                                Target: {tracker.currency} {Number(tracker.target_price).toLocaleString()}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                                <Target className="h-3 w-3" />
+                                Any drop
+                              </span>
+                            )}
+                          </div>
+                        )}
+
                         <div className="text-left sm:text-right">
                           <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                            Target Price
+                            {tracker.target_price ? "Target Price" : "Alert Type"}
                           </p>
                           <p className="text-xl font-extrabold text-foreground font-mono">
                             {tracker.target_price
                               ? `${tracker.currency} ${Number(tracker.target_price).toLocaleString()}`
                               : "Any Price Drop"}
                           </p>
+                          {tracker.last_notified_at && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              Last alert: {new Date(tracker.last_notified_at).toLocaleDateString()}
+                            </span>
+                          )}
                         </div>
 
                         <Button
