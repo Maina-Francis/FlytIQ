@@ -65,10 +65,12 @@ export function Navbar() {
       <header className="sticky top-0 z-40 w-full">
         <div className="glass-panel mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-md">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-coral shadow-md">
               <Plane className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-gradient-brand">FlytIQ</span>
+            <span className="font-display text-xl font-bold tracking-tight text-foreground">
+              Flyt<span className="text-primary">IQ</span>
+            </span>
           </Link>
 
           <div className="flex items-center gap-1.5 sm:gap-3">
