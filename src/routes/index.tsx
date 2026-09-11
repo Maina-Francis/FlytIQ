@@ -217,19 +217,21 @@ function Index() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             {STEPS.map((step, i) => (
               <div key={step.title} className="relative">
-                <div className="glass-panel rounded-2xl p-6 text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-sm">
-                    <step.icon className="h-7 w-7 text-primary" />
+                <div className="glass-panel h-full rounded-2xl p-7 transition-all duration-300 hover:border-primary/40">
+                  <div className="mb-5 flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15">
+                      <step.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <span className="font-display text-xs font-bold uppercase tracking-widest text-coral">
+                      0{i + 1}
+                    </span>
                   </div>
-                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-primary">
-                    Step {i + 1}
-                  </div>
-                  <h3 className="text-base font-bold text-foreground">{step.title}</h3>
+                  <h3 className="font-display text-lg font-bold text-foreground">{step.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-primary/40 sm:block">
-                    <ArrowRight className="h-6 w-6" />
+                  <div className="absolute -right-4 top-1/2 z-10 hidden -translate-y-1/2 text-primary/50 sm:block">
+                    <ArrowRight className="h-5 w-5" />
                   </div>
                 )}
               </div>
@@ -244,10 +246,10 @@ function Index() {
           <div className="glass-panel overflow-hidden rounded-2xl">
             <div className="grid grid-cols-1 gap-8 p-8 sm:p-10 lg:grid-cols-2">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-4xl">
                   Flight prices change constantly.
                   <br />
-                  <span className="text-gradient-brand">We watch them for you.</span>
+                  <span className="text-primary italic">We watch them for you.</span>
                 </h2>
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                   Airline fares fluctuate due to demand, seasonality, seat availability, and
@@ -307,8 +309,8 @@ function Index() {
                           26% below your target
                         </span>
                       </div>
-                      <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-center">
-                        <span className="text-xs font-bold text-primary">Book on Skyscanner →</span>
+                      <div className="mt-3 rounded-lg bg-coral/15 px-3 py-2 text-center">
+                        <span className="text-xs font-bold text-coral">Book on Skyscanner →</span>
                       </div>
                     </div>
                   </div>
