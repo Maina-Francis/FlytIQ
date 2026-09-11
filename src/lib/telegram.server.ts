@@ -60,7 +60,9 @@ bot.command("start", async (ctx) => {
       "Track flight prices in real-time and get alerted the moment fares drop.\n\n" +
       "*Commands:*\n" +
       "• `/track NBO CPT 80000` — Track a route with a target price\n" +
-      "• `/deals` — View your active price trackers\n\n" +
+      "• `/track NBO CPT any` — Alert on any price drop\n" +
+      "• `/deals` — View your active price trackers\n" +
+      "• `/help` — Show all commands\n\n" +
       "_Visit [FlytIQ](https://flytiq.app) to set up alerts from your browser._",
     { parse_mode: "Markdown" },
   );
@@ -71,10 +73,12 @@ bot.command("start", async (ctx) => {
 bot.command("track", async (ctx) => {
   const args = ctx.match.trim().split(/\s+/);
 
-  if (args.length < 3 || args[0] === "") {
+  if (args.length < 2 || args[0] === "") {
     return ctx.reply(
-      "⚠️ *Usage:* `/track <ORIGIN> <DESTINATION> <TARGET_PRICE>`\n\n" +
-        "_Example:_ `/track NBO CPT 85000`\n\n" +
+      "⚠️ *Usage:* `/track <ORIGIN> <DESTINATION> [TARGET_PRICE]`\n\n" +
+        "_Examples:_\n" +
+        "• `/track NBO CPT 85000` — alert when fare drops below 85,000\n" +
+        "• `/track NBO CPT any` — alert on any price drop\n\n" +
         "• Origin & destination are IATA airport codes (3 letters)\n" +
         "• Target price is in your local currency",
       { parse_mode: "Markdown" },
@@ -82,13 +86,15 @@ bot.command("track", async (ctx) => {
   }
 
   const [origin, destination, rawPrice] = args;
-  const targetPrice = parseFloat(rawPrice ?? "0");
   const chatId = ctx.chat.id.toString();
 
-  if (!origin || !destination || isNaN(targetPrice) || targetPrice <= 0) {
+  const isAnyDrop = rawPrice?.toLowerCase() === "any";
+  const targetPrice = isAnyDrop ? null : parseFloat(rawPrice ?? "0");
+
+  if (!origin || !destination || (!isAnyDrop && (isNaN(targetPrice!) || targetPrice! <= 0))) {
     return ctx.reply(
-      "❌ Invalid arguments. Please provide valid IATA codes and a positive target price.\n\n" +
-        "_Example:_ `/track NBO CPT 85000`",
+      "❌ Invalid arguments. Please provide valid IATA codes and a positive target price (or 'any').\n\n" +
+        "_Example:_ `/track NBO CPT 85000` or `/track NBO CPT any`",
       { parse_mode: "Markdown" },
     );
   }
@@ -99,8 +105,9 @@ bot.command("track", async (ctx) => {
     telegram_chat_id: chatId,
     origin_iata: origin.toUpperCase(),
     destination_iata: destination.toUpperCase(),
-    departure_date: today, // Bot-created trackers use today as a rolling baseline
+    departure_date: today,
     target_price: targetPrice,
+    currency: "USD",
     is_active: true,
   });
 
@@ -114,10 +121,14 @@ bot.command("track", async (ctx) => {
     `https://www.skyscanner.net/transport/flights/${origin.toLowerCase()}/${destination.toLowerCase()}/`,
   );
 
+  const priceLabel = isAnyDrop
+    ? "any price drop"
+    : `${targetPrice!.toLocaleString()}`;
+
   await ctx.reply(
     `🎉 *Tracker Set!*\n\n` +
       `Monitoring ✈️ *${origin.toUpperCase()}* ➔ *${destination.toUpperCase()}*\n` +
-      `We'll notify you when fares drop below *${targetPrice.toLocaleString()}*.\n\n` +
+      `We'll notify you on ${isAnyDrop ? "*any price drop*" : `when fares drop below *${priceLabel}*`}.\n\n` +
       `_Type /deals to see all your active trackers._`,
     { parse_mode: "Markdown", reply_markup: keyboard },
   );
@@ -169,9 +180,10 @@ bot.command("help", async (ctx) => {
     "*FlightIQ Bot Commands:*\n\n" +
       "• `/start` — Welcome & account setup\n" +
       "• `/track <ORIGIN> <DEST> <PRICE>` — Set a price alert\n" +
+      "• `/track <ORIGIN> <DEST> any` — Alert on any price drop\n" +
       "• `/deals` — View your active trackers\n" +
       "• `/help` — Show this message\n\n" +
-      "_Example:_ `/track NBO LHR 120000`",
+      "_Examples:_ `/track NBO LHR 120000` or `/track NBO LHR any`",
     { parse_mode: "Markdown" },
   );
 });

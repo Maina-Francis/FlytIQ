@@ -69,7 +69,7 @@ function DealsPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  const loadTrackers = useCallback(async (userEmail?: string) => {
+  const loadTrackers = useCallback(async (userEmail?: string, userTelegramChatId?: string) => {
     try {
       let query = supabase
         .from("price_trackers")
@@ -77,8 +77,13 @@ function DealsPage() {
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
-      if (userEmail) {
-        query = query.or(`email.eq.${userEmail}`);
+      // Build an OR filter: match by email OR by telegram_chat_id
+      const orParts: string[] = [];
+      if (userEmail) orParts.push(`email.eq.${userEmail}`);
+      if (userTelegramChatId) orParts.push(`telegram_chat_id.eq.${userTelegramChatId}`);
+
+      if (orParts.length > 0) {
+        query = query.or(orParts.join(","));
       }
 
       const { data, error } = await query;
@@ -97,11 +102,19 @@ function DealsPage() {
     initAnalytics();
     trackPageView("/deals");
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setLoading(false);
-      if (session?.user?.email) {
-        loadTrackers(session.user.email);
+      if (session?.user) {
+        // Fetch the user's linked Telegram chat ID from profiles
+        let telegramChatId: string | undefined;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("telegram_chat_id")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        if (profile?.telegram_chat_id) telegramChatId = profile.telegram_chat_id;
+        loadTrackers(session.user.email, telegramChatId);
       } else {
         loadTrackers();
       }
@@ -112,7 +125,17 @@ function DealsPage() {
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (newSession?.user?.email) {
-        loadTrackers(newSession.user.email);
+        // Fetch Telegram chat ID on auth state change too
+        (async () => {
+          let telegramChatId: string | undefined;
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("telegram_chat_id")
+            .eq("id", newSession!.user.id)
+            .maybeSingle();
+          if (profile?.telegram_chat_id) telegramChatId = profile.telegram_chat_id;
+          loadTrackers(newSession!.user.email, telegramChatId);
+        })();
       } else {
         setTrackers([]);
       }

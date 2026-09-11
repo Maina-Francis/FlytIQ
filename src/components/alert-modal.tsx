@@ -117,7 +117,7 @@ export function AlertModal({
         destination_iata: destination.toUpperCase(),
         departure_date: departureDate,
         return_date: returnDate || null,
-        target_price: finalTargetPrice,
+        target_price: alertOnAnyDrop ? null : finalTargetPrice,
         currency: currency,
         email: channel === "email" ? email.trim() : null,
         telegram_chat_id: channel === "telegram" ? telegramChatId.trim() : null,
@@ -128,6 +128,15 @@ export function AlertModal({
         console.error("Error creating price tracker:", error);
         toast.error("Could not activate price alert. Please try again.");
         return;
+      }
+
+      // If logged-in user chose Telegram, link their profile to this chat ID
+      // so trackers show up on the deals page
+      if (channel === "telegram" && userId && telegramChatId.trim()) {
+        await supabase
+          .from("profiles")
+          .update({ telegram_chat_id: telegramChatId.trim() })
+          .eq("id", userId);
       }
 
       // Track analytics conversion event
